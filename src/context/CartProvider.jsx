@@ -61,7 +61,7 @@ export default function CartProvider({ children }) {
     return { total, count }
   }, [items])
 
-  const buildWhatsAppMessage = () => {
+  const buildWhatsAppMessage = (extraLines = []) => {
     const lines = items.map(i => `• ${i.name} x${i.qty} = ${formatPrice(i.price * i.qty)}`)
     const message = [
       'Hola! Quiero hacer el siguiente pedido:',
@@ -69,6 +69,7 @@ export default function CartProvider({ children }) {
       ...lines,
       '',
       `TOTAL: ${formatPrice(total)}`,
+      ...(extraLines.length ? ['', ...extraLines] : []),
     ].join('\n')
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
   }

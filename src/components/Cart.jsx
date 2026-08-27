@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../data/products'
 import { WhatsAppIcon } from './Layout'
@@ -7,6 +8,26 @@ export default function Cart({ open, onClose, addedId }) {
   const { items, total, count, removeItem, updateQty, clearCart, buildWhatsAppMessage } = useCart()
   const [highlightId, setHighlightId] = useState(null)
   const [prevAddedId, setPrevAddedId] = useState(null)
+  const [delivery, setDelivery] = useState(false)
+  const [address, setAddress] = useState('')
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const goToProducts = () => {
+    onClose()
+    const scroll = () => document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' })
+    if (location.pathname === '/') {
+      scroll()
+    } else {
+      navigate('/')
+      setTimeout(scroll, 120)
+    }
+  }
+
+  const deliveryLines = delivery
+    ? [`Dirección de entrega: ${address.trim() || 'a confirmar'}`]
+    : []
+  const checkoutHref = buildWhatsAppMessage(deliveryLines)
 
   if (addedId !== prevAddedId) {
     setPrevAddedId(addedId)
@@ -36,7 +57,7 @@ export default function Cart({ open, onClose, addedId }) {
           <div className="cart-empty">
             <span className="cart-empty-icon">🛒</span>
             <p>Tu carrito está vacío</p>
-            <button className="btn btn-primary" onClick={onClose}>
+            <button className="btn btn-primary" onClick={goToProducts}>
               Ver productos
             </button>
           </div>
@@ -73,12 +94,33 @@ export default function Cart({ open, onClose, addedId }) {
               <button className="cart-clear" onClick={clearCart}>
                 Vaciar carrito
               </button>
+
+              <div className="cart-delivery">
+                <label className="cart-delivery-toggle">
+                  <input
+                    type="checkbox"
+                    checked={delivery}
+                    onChange={(e) => setDelivery(e.target.checked)}
+                  />
+                  <span>🚚 Envío a domicilio</span>
+                </label>
+                {delivery && (
+                  <input
+                    type="text"
+                    className="cart-delivery-address"
+                    placeholder="Dirección de entrega (calle, número, ciudad)"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                )}
+              </div>
+
               <div className="cart-total">
                 <span>{count} {count === 1 ? 'producto' : 'productos'}</span>
                 <strong>{formatPrice(total)}</strong>
               </div>
               <a
-                href={buildWhatsAppMessage()}
+                href={checkoutHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-whatsapp cart-checkout"

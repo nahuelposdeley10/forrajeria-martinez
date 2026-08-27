@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { products, categories, formatPrice, WHATSAPP_NUMBER } from '../data/products'
 import { WhatsAppIcon } from '../components/Layout'
@@ -31,10 +31,48 @@ function Hero() {
 
 function Products() {
   const [activeCategory, setActiveCategory] = useState('todos')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 12
+  const gridRef = useRef(null)
 
-  const filtered = activeCategory === 'todos'
-    ? products
-    : products.filter(p => p.category === activeCategory)
+  const normalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+  const filtered = useMemo(() => {
+    const q = normalize(search).trim()
+    let list = activeCategory === 'todos'
+      ? products
+      : products.filter(p => p.category === activeCategory)
+    if (q) {
+      list = list.filter(p =>
+        normalize(p.name).includes(q) ||
+        normalize(p.brand).includes(q) ||
+        normalize(p.category).includes(q) ||
+        normalize(p.description).includes(q)
+      )
+    }
+    return list
+  }, [activeCategory, search])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const current = Math.min(page, totalPages)
+  const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
+
+  const goTo = p => {
+    setPage(p)
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const pageList = () => {
+    const pages = []
+    const add = p => { if (p >= 1 && p <= totalPages && !pages.includes(p)) pages.push(p) }
+    add(1)
+    if (current > 4) pages.push('…')
+    for (let p = current - 2; p <= current + 2; p++) add(p)
+    if (current < totalPages - 3) pages.push('…')
+    add(totalPages)
+    return pages
+  }
 
   return (
     <section id="productos" className="products-section">
@@ -43,39 +81,89 @@ function Products() {
         <h2>Encontra todo para tu mascota</h2>
         <p className="section-subtitle">Alimentos, accesorios, higiene y mucho más. Hacé tu pedido por WhatsApp.</p>
 
-        <div className="category-filters">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              className={`filter-btn ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </button>
-          ))}
+        <div className="product-tools">
+          <div className="search-box">
+            <input
+              type="search"
+              placeholder="Buscar por nombre, marca o categoria..."
+              value={search}
+              onChange={e => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
+              aria-label="Buscar productos"
+            />
+          </div>
+          <div className="category-filters">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                className={`filter-btn ${activeCategory === cat ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveCategory(cat)
+                  setPage(1)
+                }}
+              >
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="products-grid">
-          {filtered.map(product => (
-            <div key={product.id} className="product-card">
-              <Link to={`/producto/${product.id}`} className="product-media">
-                {product.badge && <span className="product-badge">{product.badge}</span>}
-                <img src={product.image} alt={product.name} loading="lazy" />
-              </Link>
-              <div className="product-info">
-                <span className="product-category">{product.brand || product.category}</span>
-                <h3>{product.name}</h3>
-                <p>{product.description}</p>
-                <div className="product-footer">
-                  <span className="product-price">{formatPrice(product.price)}</span>
-                  <Link to={`/producto/${product.id}`} className="btn btn-detail-sm">
-                    Ver detalle
-                  </Link>
+        <p className="results-count">{filtered.length} producto{filtered.length !== 1 ? 's' : ''}</p>
+
+        {visible.length === 0 ? (
+          <p className="no-results">No encontramos productos para tu busqueda.</p>
+        ) : (
+          <div className="products-grid" ref={gridRef}>
+            {visible.map(product => (
+              <div key={product.id} className="product-card">
+                <Link to={`/producto/${product.id}`} className="product-media">
+                  {product.badge && <span className="product-badge">{product.badge}</span>}
+                  <img src={product.image} alt={product.name} loading="lazy" />
+                </Link>
+                <div className="product-info">
+                  <span className="product-category">{product.brand || product.category}</span>
+                  <h3>{product.name}</h3>
+                  <p>{product.description}</p>
+                  <div className="product-footer">
+                    <span className="product-price">{formatPrice(product.price)}</span>
+                    <Link to={`/producto/${product.id}`} className="btn btn-detail-sm">
+                      Ver detalle
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <nav className="pagination" aria-label="Paginacion de productos">
+            <button className="page-btn" disabled={current === 1} onClick={() => goTo(current - 1)}>
+              &lsaquo; Anterior
+            </button>
+            {pageList().map((p, i) => p === '…'
+              ? <span key={`dots-${i}`} className="page-dots">…</span>
+              : (
+                <button
+                  key={p}
+                  className={`page-btn ${p === current ? 'active' : ''}`}
+                  onClick={() => goTo(p)}
+                >
+                  {p}
+                </button>
+              )
+            )}
+            <button
+              className="page-btn"
+              disabled={current === totalPages}
+              onClick={() => goTo(current + 1)}
+            >
+              Siguiente &rsaquo;
+            </button>
+          </nav>
+        )}
       </div>
     </section>
   )

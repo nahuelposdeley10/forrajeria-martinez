@@ -1,9 +1,9 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { CartContext } from './CartContext'
 import { formatPrice } from '../data/products'
 
 const STORAGE_KEY = 'forrajeria-cart'
-const WHATSAPP_NUMBER = '5491176731388'
+const WHATSAPP_NUMBER = '5491130674658'
 
 export default function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
@@ -14,6 +14,9 @@ export default function CartProvider({ children }) {
       return []
     }
   })
+
+  const [lastAdded, setLastAdded] = useState(null)
+  const lastAddedTimer = useRef(null)
 
   useEffect(() => {
     try {
@@ -33,6 +36,9 @@ export default function CartProvider({ children }) {
       }
       return [...prev, { ...product, qty }]
     })
+    setLastAdded(product)
+    if (lastAddedTimer.current) clearTimeout(lastAddedTimer.current)
+    lastAddedTimer.current = setTimeout(() => setLastAdded(null), 2500)
   }
 
   const removeItem = (id) => {
@@ -71,6 +77,7 @@ export default function CartProvider({ children }) {
     items,
     total,
     count,
+    lastAdded,
     addItem,
     removeItem,
     updateQty,

@@ -1,12 +1,24 @@
+import { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { products, formatPrice, WHATSAPP_NUMBER } from '../data/products'
 import { WhatsAppIcon } from '../components/Layout'
 import { useCart } from '../context/CartContext'
+import { flyToCart } from '../utils/flyToCart'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const product = products.find(p => p.id === Number(id))
   const { addItem } = useCart()
+  const [justAdded, setJustAdded] = useState(false)
+
+  const handleAdd = () => {
+    const from = document.querySelector('.detail-actions .btn-primary')
+    const to = document.querySelector('.cart-button')
+    flyToCart({ image: product.image, from, to })
+    addItem(product)
+    setJustAdded(true)
+    window.setTimeout(() => setJustAdded(false), 1500)
+  }
 
   if (!product) {
     return <Navigate to="/" replace />
@@ -54,9 +66,9 @@ export default function ProductDetail() {
               <div className="detail-actions">
                 <button
                   className="btn btn-primary"
-                  onClick={() => addItem(product)}
+                  onClick={handleAdd}
                 >
-                  🛒 Agregar al carrito
+                  {justAdded ? '✓ Agregado al carrito' : '🛒 Agregar al carrito'}
                 </button>
                 <a
                   href={waLink}

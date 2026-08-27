@@ -1,8 +1,9 @@
 import { Routes, Route, Outlet, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { Navbar, Footer, FloatingWhatsApp } from './components/Layout'
 import Cart from './components/Cart'
+import { useCart } from './context/CartContext'
 import Home from './pages/Home'
 import ProductDetail from './pages/ProductDetail'
 
@@ -18,6 +19,18 @@ function ScrollToTop() {
 
 function Layout() {
   const [cartOpen, setCartOpen] = useState(false)
+  const { lastAdded } = useCart()
+  const prevAddedId = useRef(null)
+
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768
+    const isNewAdd = lastAdded && lastAdded.id !== prevAddedId.current
+    if (isNewAdd) prevAddedId.current = lastAdded.id
+    if (isNewAdd && isMobile) {
+      const timer = setTimeout(() => setCartOpen(true), 680)
+      return () => clearTimeout(timer)
+    }
+  }, [lastAdded])
 
   return (
     <>
@@ -26,7 +39,7 @@ function Layout() {
       <Outlet />
       <Footer />
       <FloatingWhatsApp />
-      <Cart open={cartOpen} onClose={() => setCartOpen(false)} />
+      <Cart open={cartOpen} onClose={() => setCartOpen(false)} addedId={lastAdded?.id} />
     </>
   )
 }

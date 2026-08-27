@@ -9,7 +9,7 @@ function Hero() {
       <div className="hero-overlay"></div>
       <div className="hero-content">
         <span className="hero-badge">🐾 Tu tienda de confianza</span>
-        <h1>Forreria Martinez</h1>
+        <h1>Forrajeria Martinez</h1>
         <p>Todo lo que tu mascota necesita, con la mejor calidad y precios imbatibles. Hacemos envíos a domicilio.</p>
         <div className="hero-buttons">
           <a href="#productos" className="btn btn-primary">
@@ -90,7 +90,7 @@ function About() {
             <span className="section-badge">❤️ Sobre nosotros</span>
             <h2>Mas de 15 años cuidando a tus mascotas</h2>
             <p>
-              En Forreria Martinez nos dedicamos con amor a brindar lo mejor para tus mascotas.
+              En Forrajeria Martinez nos dedicamos con amor a brindar lo mejor para tus mascotas.
               Contamos con una amplia variedad de productos de las mejores marcas, precios accesibles
               y un equipo que siempre está dispuesto a ayudarte.
             </p>
@@ -154,7 +154,7 @@ function Contact() {
           <div className="contact-card">
             <span className="contact-icon">📞</span>
             <h3>Teléfono</h3>
-            <p>+54 11 2345-6789</p>
+            <p>+54 11 3067-4658</p>
           </div>
         </div>
         <a

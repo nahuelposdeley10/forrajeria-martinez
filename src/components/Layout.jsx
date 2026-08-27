@@ -21,7 +21,7 @@ function CartButton({ onClick }) {
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
       </svg>
       <span className="cart-button-text">Carrito</span>
-      {count > 0 && <span className="cart-button-count">{count}</span>}
+      {count > 0 && <span key={count} className="cart-button-count bump">{count}</span>}
     </button>
   )
 }
@@ -44,11 +44,8 @@ export function Navbar({ onOpenCart }) {
     <nav className="navbar">
       <div className="nav-container">
         <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-          🐾 <span>Forreria Martinez</span>
+          🐾 <span>Forrajeria Martinez</span>
         </Link>
-        <button className="nav-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
-          {menuOpen ? '✕' : '☰'}
-        </button>
         <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
           <li>
             <Link to="/" onClick={() => setMenuOpen(false)}>Inicio</Link>
@@ -72,10 +69,13 @@ export function Navbar({ onOpenCart }) {
               <WhatsAppIcon /> WhatsApp
             </a>
           </li>
-          <li>
-            <CartButton onClick={() => { setMenuOpen(false); onOpenCart() }} />
-          </li>
         </ul>
+        <div className="nav-actions">
+          <CartButton onClick={() => { setMenuOpen(false); onOpenCart() }} />
+          <button className="nav-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
+            {menuOpen ? '✕' : '☰'}
+          </button>
+        </div>
       </div>
     </nav>
   )
@@ -86,7 +86,7 @@ export function Footer() {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-brand">
-          <span className="footer-logo">🐾 Forreria Martinez</span>
+          <span className="footer-logo">🐾 Forrajeria Martinez</span>
           <p>Tu mascota merece lo mejor.</p>
         </div>
         <div className="footer-links">
@@ -97,7 +97,7 @@ export function Footer() {
         </div>
       </div>
       <div className="footer-bottom">
-        <p>&copy; 2026 Forreria Martinez. Todos los derechos reservados.</p>
+        <p>&copy; 2026 Forrajeria Martinez. Todos los derechos reservados.</p>
       </div>
     </footer>
   )

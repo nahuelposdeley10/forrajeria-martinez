@@ -1,9 +1,23 @@
+import { useEffect, useState } from 'react'
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../data/products'
 import { WhatsAppIcon } from './Layout'
 
-export default function Cart({ open, onClose }) {
+export default function Cart({ open, onClose, addedId }) {
   const { items, total, count, removeItem, updateQty, clearCart, buildWhatsAppMessage } = useCart()
+  const [highlightId, setHighlightId] = useState(null)
+  const [prevAddedId, setPrevAddedId] = useState(null)
+
+  if (addedId !== prevAddedId) {
+    setPrevAddedId(addedId)
+    setHighlightId(addedId)
+  }
+
+  useEffect(() => {
+    if (!addedId) return
+    const timer = setTimeout(() => setHighlightId(null), 2200)
+    return () => clearTimeout(timer)
+  }, [addedId])
 
   if (!open) return null
 
@@ -30,7 +44,10 @@ export default function Cart({ open, onClose }) {
           <>
             <div className="cart-items">
               {items.map(item => (
-                <div key={item.id} className="cart-item">
+                <div
+                  key={item.id}
+                  className={`cart-item${item.id === highlightId ? ' added' : ''}`}
+                >
                   <img src={item.image} alt={item.name} className="cart-item-img" />
                   <div className="cart-item-info">
                     <span className="cart-item-name">{item.name}</span>
@@ -40,14 +57,14 @@ export default function Cart({ open, onClose }) {
                       <span className="cart-item-qty">{item.qty}</span>
                       <button onClick={() => updateQty(item.id, item.qty + 1)} aria-label="Más">+</button>
                     </div>
+                    <button
+                      className="cart-item-remove"
+                      onClick={() => removeItem(item.id)}
+                      aria-label="Eliminar producto"
+                    >
+                      🗑 Eliminar
+                    </button>
                   </div>
-                  <button
-                    className="cart-item-remove"
-                    onClick={() => removeItem(item.id)}
-                    aria-label="Quitar"
-                  >
-                    ✕
-                  </button>
                 </div>
               ))}
             </div>

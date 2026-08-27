@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { products, categories, formatPrice, WHATSAPP_NUMBER } from '../data/products'
+import { products, formatPrice, WHATSAPP_NUMBER } from '../data/products'
+import { STAGE_TAGS, SIZE_TAGS, BREED_DEFS, toKey } from '../data/filters'
+import FilterModal from '../components/FilterModal'
 import { WhatsAppIcon } from '../components/Layout'
 
 function Hero() {
@@ -12,7 +14,14 @@ function Hero() {
         <h1>Forrajeria Martinez</h1>
         <p>Todo lo que tu mascota necesita, con la mejor calidad y precios imbatibles. Hacemos envíos a domicilio.</p>
         <div className="hero-buttons">
-          <a href="#productos" className="btn btn-primary">
+          <a
+            href="#productos"
+            className="btn btn-primary"
+            onClick={e => {
+              e.preventDefault()
+              document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' })
+            }}
+          >
             Ver productos
           </a>
           <a
@@ -33,30 +42,64 @@ function Products() {
   const [activeCategory, setActiveCategory] = useState('todos')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [marca, setMarca] = useState('todos')
+  const [etapa, setEtapa] = useState('todos')
+  const [tamano, setTamano] = useState('todos')
+  const [raza, setRaza] = useState('todos')
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const PAGE_SIZE = 12
   const gridRef = useRef(null)
 
-  const normalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-
   const filtered = useMemo(() => {
-    const q = normalize(search).trim()
+    const q = toKey(search).trim()
     let list = activeCategory === 'todos'
       ? products
       : products.filter(p => p.category === activeCategory)
+
+    if (marca !== 'todos') {
+      list = list.filter(p => p.brand === marca)
+    }
+    if (etapa !== 'todos') {
+      const tag = STAGE_TAGS.find(t => t.key === etapa)
+      if (tag) list = list.filter(p => tag.re.test(toKey(p.name)))
+    }
+    if (tamano !== 'todos') {
+      const tag = SIZE_TAGS.find(t => t.key === tamano)
+      if (tag) list = list.filter(p => tag.re.test(toKey(p.name)))
+    }
+    if (raza !== 'todos') {
+      const def = BREED_DEFS.find(b => b.key === raza)
+      if (def) list = list.filter(p => def.re.test(toKey(p.name)))
+    }
     if (q) {
       list = list.filter(p =>
-        normalize(p.name).includes(q) ||
-        normalize(p.brand).includes(q) ||
-        normalize(p.category).includes(q) ||
-        normalize(p.description).includes(q)
+        toKey(p.name).includes(q) ||
+        toKey(p.brand).includes(q) ||
+        toKey(p.category).includes(q) ||
+        toKey(p.description).includes(q)
       )
     }
     return list
-  }, [activeCategory, search])
+  }, [activeCategory, search, marca, etapa, tamano, raza])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const current = Math.min(page, totalPages)
   const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
+  const activeFilterCount = (activeCategory !== 'todos' ? 1 : 0) +
+    (marca !== 'todos' ? 1 : 0) +
+    (etapa !== 'todos' ? 1 : 0) +
+    (tamano !== 'todos' ? 1 : 0) +
+    (raza !== 'todos' ? 1 : 0)
+
+  const applyFilters = ({ category, marca: m, etapa: e, tamano: t, raza: r }) => {
+    setActiveCategory(category)
+    setMarca(m)
+    setEtapa(e)
+    setTamano(t)
+    setRaza(r)
+    setPage(1)
+    setFiltersOpen(false)
+  }
 
   const goTo = p => {
     setPage(p)
@@ -94,20 +137,15 @@ function Products() {
               aria-label="Buscar productos"
             />
           </div>
-          <div className="category-filters">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                className={`filter-btn ${activeCategory === cat ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveCategory(cat)
-                  setPage(1)
-                }}
-              >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </button>
-            ))}
-          </div>
+          <button className="filter-trigger" onClick={() => setFiltersOpen(true)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+            </svg>
+            Filtros
+            {activeFilterCount > 0 && (
+              <span className="filter-trigger-badge">{activeFilterCount}</span>
+            )}
+          </button>
         </div>
 
         <p className="results-count">{filtered.length} producto{filtered.length !== 1 ? 's' : ''}</p>
@@ -165,6 +203,13 @@ function Products() {
           </nav>
         )}
       </div>
+
+      <FilterModal
+        open={filtersOpen}
+        initial={{ category: activeCategory, marca, etapa, tamano, raza }}
+        onApply={applyFilters}
+        onClose={() => setFiltersOpen(false)}
+      />
     </section>
   )
 }

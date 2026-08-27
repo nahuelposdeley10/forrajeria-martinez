@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
 import { products, formatPrice, WHATSAPP_NUMBER } from '../data/products'
 import { WhatsAppIcon } from '../components/Layout'
 import { useCart } from '../context/CartContext'
@@ -10,6 +10,15 @@ export default function ProductDetail() {
   const product = products.find(p => p.id === Number(id))
   const { addItem } = useCart()
   const [justAdded, setJustAdded] = useState(false)
+  const navigate = useNavigate()
+
+  const goBackToProducts = () => {
+    navigate('/')
+    setTimeout(() => {
+      const el = document.getElementById('productos')
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }, 120)
+  }
 
   const handleAdd = () => {
     const from = document.querySelector('.detail-actions .btn-primary')
@@ -37,9 +46,9 @@ export default function ProductDetail() {
       <div className="detail-hero-spacer"></div>
       <section className="detail-section">
         <div className="section-container">
-          <Link to="/#productos" className="detail-back">
+          <button className="detail-back" onClick={goBackToProducts}>
             ← Volver a productos
-          </Link>
+          </button>
 
           <div className="detail-grid">
             <div className="detail-media">

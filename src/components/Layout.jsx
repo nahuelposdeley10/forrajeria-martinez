@@ -82,6 +82,16 @@ export function Navbar({ onOpenCart }) {
 }
 
 export function Footer() {
+  const navigate = useNavigate()
+  const goSection = (e, sectionId) => {
+    e.preventDefault()
+    navigate('/')
+    setTimeout(() => {
+      const el = document.getElementById(sectionId)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }, 0)
+  }
+
   return (
     <footer className="footer">
       <div className="footer-content">
@@ -90,10 +100,10 @@ export function Footer() {
           <p>Tu mascota merece lo mejor.</p>
         </div>
         <div className="footer-links">
-          <Link to="/">Inicio</Link>
-          <Link to="/#productos">Productos</Link>
-          <Link to="/#nosotros">Nosotros</Link>
-          <Link to="/#contacto">Contacto</Link>
+          <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Inicio</Link>
+          <a href="#productos" onClick={(e) => goSection(e, 'productos')}>Productos</a>
+          <a href="#nosotros" onClick={(e) => goSection(e, 'nosotros')}>Nosotros</a>
+          <a href="#contacto" onClick={(e) => goSection(e, 'contacto')}>Contacto</a>
         </div>
       </div>
       <div className="footer-bottom">

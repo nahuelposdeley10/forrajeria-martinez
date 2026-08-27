@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { products, formatPrice, WHATSAPP_NUMBER } from '../data/products'
+import { products, categories, formatPrice, WHATSAPP_NUMBER } from '../data/products'
 import { STAGE_TAGS, SIZE_TAGS, BREED_DEFS, toKey } from '../data/filters'
 import FilterModal from '../components/FilterModal'
 import { WhatsAppIcon } from '../components/Layout'
@@ -148,6 +148,21 @@ function Products() {
           </button>
         </div>
 
+        <div className="category-filters">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              className={`filter-btn ${activeCategory === cat ? 'active' : ''}`}
+              onClick={() => {
+                setActiveCategory(cat)
+                setPage(1)
+              }}
+            >
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </button>
+          ))}
+        </div>
+
         <p className="results-count">{filtered.length} producto{filtered.length !== 1 ? 's' : ''}</p>
 
         {visible.length === 0 ? (
@@ -205,6 +220,7 @@ function Products() {
       </div>
 
       <FilterModal
+        key={filtersOpen ? 'open' : 'closed'}
         open={filtersOpen}
         initial={{ category: activeCategory, marca, etapa, tamano, raza }}
         onApply={applyFilters}

@@ -282,14 +282,14 @@ function BrandsPanel({ brands, search, page, total, pages, loading, onCreate, on
       </div>
       <div className="admin-table">
         {!loading && brands.map(b => (
-          <div className="admin-table-row" key={b.name}>
+          <div className="admin-table-row admin-brand-row" key={b.name}>
             <div className="admin-brand-info">
               <span className="admin-brand-name">{b.name}</span>
               <span className="admin-hint">{b.count} producto{b.count !== 1 ? 's' : ''}</span>
             </div>
-            <div className="admin-actions">
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setRenaming(b); setRenamingValue(b.name) }}>Renombrar</button>
-              <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(b)}>Eliminar</button>
+            <div className="admin-actions admin-brand-actions">
+              <button type="button" className="btn btn-ghost btn-xs" onClick={() => { setRenaming(b); setRenamingValue(b.name) }}>Renombrar</button>
+              <button type="button" className="btn btn-danger btn-xs" onClick={() => onDelete(b)}>Eliminar</button>
             </div>
           </div>
         ))}
@@ -466,7 +466,7 @@ function Admin() {
     const page = overrides.page !== undefined ? overrides.page : brandPage
     setBrandLoading(true)
     try {
-      const data = await api.fetchBrands({ search, page, limit: 20 })
+      const data = await api.fetchBrands({ search, page, limit: 8 })
       setBrands(data.brands)
       setBrandTotal(data.total)
       setBrandPages(Math.max(1, data.pages))

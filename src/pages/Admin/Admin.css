@@ -26,6 +26,12 @@
   border-radius: 8px;
 }
 
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
 .btn-block {
   width: 100%;
   justify-content: center;
@@ -216,6 +222,24 @@
   font-weight: 600;
   color: var(--text-heading);
   font-size: 14.5px;
+}
+
+.admin-brand-row {
+  padding: 6px 10px;
+  gap: 10px;
+}
+
+.admin-brand-row .admin-brand-name {
+  font-size: 13px;
+}
+
+.admin-brand-actions {
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.admin-brand-actions .btn {
+  white-space: nowrap;
 }
 
 .admin-brand-edit {
@@ -571,6 +595,10 @@
     grid-column: 3;
     grid-row: 1 / 4;
     flex-direction: column;
+  }
+
+  .admin-brand-actions {
+    flex-direction: row;
   }
 
   .admin-form-grid {

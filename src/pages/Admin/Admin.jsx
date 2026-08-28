@@ -485,7 +485,10 @@ function Admin() {
   const loadAllBrands = useCallback(async () => {
     try {
       const data = await api.fetchBrands({ limit: 200 })
-      setAllBrands(data.brands)
+      const sorted = [...data.brands].sort((a, b) =>
+        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
+      )
+      setAllBrands(sorted)
     } catch {
       /* si falla, el formulario queda con la lista previa */
     }

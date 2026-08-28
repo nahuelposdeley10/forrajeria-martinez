@@ -410,9 +410,8 @@ function Admin() {
   const [deleting, setDeleting] = useState(false)
   const [pendingBrandDelete, setPendingBrandDelete] = useState(null)
   const [brandDeleting, setBrandDeleting] = useState(false)
-  const [facets, setFacets] = useState({ brands: [] })
-  const [brands, setBrands] = useState([])
   const [allBrands, setAllBrands] = useState([])
+  const [brands, setBrands] = useState([])
   const [brandSearch, setBrandSearch] = useState('')
   const [brandPage, setBrandPage] = useState(1)
   const [brandTotal, setBrandTotal] = useState(0)
@@ -454,15 +453,6 @@ function Admin() {
       if (req === latestReq.current) setLoading(false)
     }
   }, [search, brandFilter, catFilter, page])
-
-  const loadFacets = useCallback(async () => {
-    try {
-      const data = await api.fetchFacets({ active: 'all' })
-      setFacets(data)
-    } catch {
-      /* las marcas quedan vacías hasta que cargue */
-    }
-  }, [])
 
   const loadBrands = useCallback(async (overrides = {}) => {
     const search = overrides.search !== undefined ? overrides.search : brandSearch
@@ -510,16 +500,16 @@ function Admin() {
   useEffect(() => {
     if (!authed) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadFacets()
-  }, [authed, loadFacets])
+    loadBrands()
+  }, [authed, loadBrands])
 
   useEffect(() => {
     if (!authed) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadBrands()
-  }, [authed, loadBrands])
+    loadAllBrands()
+  }, [authed, loadAllBrands])
 
-  const brandList = facets.brands
+  const brandList = allBrands
 
   const totalPages = Math.max(1, pagesCount)
   const pageSafe = Math.min(page, totalPages)
@@ -547,7 +537,7 @@ function Admin() {
       notify('Producto agregado correctamente')
     }
     setFormOpen(false)
-    await Promise.all([loadPage(), loadFacets()])
+    await loadPage()
     return result
   }
 
@@ -568,7 +558,7 @@ function Admin() {
       await api.deleteProduct(pendingDelete.id)
       notify(`Producto "${pendingDelete.name}" eliminado`)
       setPendingDelete(null)
-      await Promise.all([loadPage(), loadFacets()])
+      await loadPage()
     } catch (err) {
       notify(err.message, 'danger')
     } finally {
@@ -587,7 +577,7 @@ function Admin() {
   const handleRenameBrand = async (oldName, newName) => {
     await api.renameBrand(oldName, newName)
     notify(`Marca renombrada a "${newName}"`)
-    await Promise.all([loadPage(), loadFacets(), refreshBrands()])
+      await Promise.all([loadPage(), refreshBrands()])
   }
 
   const runBrandDelete = async (mode, successMsg, reloadProducts) => {
@@ -598,7 +588,7 @@ function Admin() {
       notify(successMsg)
       setPendingBrandDelete(null)
       if (reloadProducts) {
-        await Promise.all([loadPage(), loadFacets()])
+        await loadPage()
       }
       await refreshBrands()
     } catch (err) {
@@ -628,7 +618,7 @@ function Admin() {
     setProducts([])
     setTotalProducts(0)
     setPagesCount(1)
-    setFacets({ brands: [] })
+    setAllBrands([])
     setBrands([])
     setBrandSearch('')
     setBrandPage(1)

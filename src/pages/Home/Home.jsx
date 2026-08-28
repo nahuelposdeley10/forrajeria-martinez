@@ -5,6 +5,7 @@ import { catalogApi } from '../../data/catalogApi/catalogApi'
 import FilterModal from '../../components/FilterModal/FilterModal'
 import { ProductGridSkeleton } from '../../components/Skeleton/Skeleton'
 import { WhatsAppIcon } from '../../components/Layout/Layout'
+import { setSEO, setJsonLd, SITE_URL, SITE_NAME, SITE_DESCRIPTION } from '../../utils/seo/seo'
 import './Home.css'
 
 function Hero() {
@@ -224,7 +225,7 @@ function Products() {
                 <Link to={`/producto/${product.id}`} className="product-media">
                   {product.badge && <span className="product-badge">{product.badge}</span>}
                   {product.stock <= 0 && <span className="product-badge product-badge-stock">Sin stock</span>}
-                  <img src={product.image || '/products/placeholder.jpg'} alt={product.name} loading="lazy" className={product.stock <= 0 ? 'out' : ''} />
+                  <img src={product.image || '/products/placeholder.jpg'} alt={product.name} loading="lazy" decoding="async" className={product.stock <= 0 ? 'out' : ''} />
                 </Link>
                 <div className="product-info">
                   <span className="product-category">{product.brand || 'Sin marca'}</span>
@@ -373,6 +374,25 @@ function Contact() {
 }
 
 export default function Home() {
+  useEffect(() => {
+    setSEO({ title: `${SITE_NAME} | Alimentos y accesorios para mascotas`, description: SITE_DESCRIPTION, url: SITE_URL })
+    setJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'Store',
+      name: SITE_NAME,
+      url: SITE_URL,
+      telephone: '+54 11 3067-4658',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Av. San Martín 1234',
+        addressLocality: 'Buenos Aires',
+        addressCountry: 'AR',
+      },
+      openingHours: ['Mo-Sa 09:00-19:00', 'Su 10:00-14:00'],
+      priceRange: '$',
+    })
+  }, [])
+
   return (
     <>
       <Hero />

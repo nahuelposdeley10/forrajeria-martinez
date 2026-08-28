@@ -1,7 +1,9 @@
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
 async function request(path) {
   let res
   try {
-    res = await fetch(`/api${path}`)
+    res = await fetch(`${API_URL}${path}`)
   } catch {
     const err = new Error('No se pudo conectar con el servidor.')
     err.status = 0

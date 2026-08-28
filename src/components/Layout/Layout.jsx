@@ -70,6 +70,9 @@ export function Navbar({ onOpenCart }) {
               <WhatsAppIcon /> WhatsApp
             </a>
           </li>
+          <li>
+            <Link to="/admin" onClick={() => setMenuOpen(false)}>Iniciar Sesión</Link>
+          </li>
         </ul>
         <div className="nav-actions">
           <CartButton onClick={() => { setMenuOpen(false); onOpenCart() }} />

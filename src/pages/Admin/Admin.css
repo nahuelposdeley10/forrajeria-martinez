@@ -460,6 +460,54 @@
   justify-content: center;
 }
 
+.admin-tab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.admin-tab-head h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-heading);
+}
+
+.admin-brands-create {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-brands-create input {
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 14px;
+  min-width: 180px;
+}
+
+.admin-modal-sm {
+  max-width: 380px;
+}
+
+.admin-confirm-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.admin-brands-create input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(244, 114, 55, 0.15);
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
   .toast-container {

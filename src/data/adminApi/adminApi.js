@@ -1,6 +1,8 @@
 const TOKEN_KEY = 'fm_admin_token'
 let token = localStorage.getItem(TOKEN_KEY) || ''
 
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
 export function setToken(next) {
   token = next || ''
   if (next) localStorage.setItem(TOKEN_KEY, next)
@@ -20,7 +22,7 @@ async function request(path, options = {}) {
 
   let res
   try {
-    res = await fetch(`/api${path}`, { ...options, headers })
+    res = await fetch(`${API_URL}${path}`, { ...options, headers })
   } catch {
     const err = new Error('No se pudo conectar con el servidor.')
     err.status = 0
@@ -87,4 +89,23 @@ export const api = {
     fd.append('image', file)
     return request('/upload', { method: 'POST', body: fd })
   },
+
+  fetchBrands: () => request('/brands'),
+
+  createBrand: name =>
+    request('/brands', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+
+  renameBrand: (oldName, newName) =>
+    request(`/brands/${encodeURIComponent(oldName)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name: newName }),
+    }),
+
+  deleteBrand: (name, opts = {}) =>
+    request(`/brands/${encodeURIComponent(name)}?products=${opts.products || 'unbrand'}`, {
+      method: 'DELETE',
+    }),
 }

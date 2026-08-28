@@ -208,11 +208,58 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
   )
 }
 
-function BrandsPanel({ brands }) {
+function BrandsPanel({ brands, onCreate, onRename, onDelete }) {
+  const [newName, setNewName] = useState('')
+  const [renaming, setRenaming] = useState(null)
+  const [renamingValue, setRenamingValue] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const submitNew = async e => {
+    e.preventDefault()
+    const name = newName.trim()
+    if (!name || busy) return
+    setBusy(true)
+    try {
+      await onCreate(name)
+      setNewName('')
+    } catch {
+      /* el error ya se muestra via toast */
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const submitRename = async e => {
+    e.preventDefault()
+    const next = renamingValue.trim()
+    if (!next || next === renaming.name || busy) return
+    setBusy(true)
+    try {
+      await onRename(renaming.name, next)
+      setRenaming(null)
+    } catch {
+      /* error via toast */
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="admin-tab">
-      <h3>Marcas</h3>
-      <p className="admin-hint">Las marcas se listan automáticamente según los productos del backoffice.</p>
+      <div className="admin-tab-head">
+        <h3>Marcas</h3>
+        <form className="admin-brands-create" onSubmit={submitNew}>
+          <input
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            placeholder="Nueva marca..."
+          />
+          <button type="submit" className="btn btn-primary" disabled={busy || !newName.trim()}>
+            Crear
+          </button>
+        </form>
+      </div>
+      <p className="admin-hint">Las marcas se listan según los productos del backoffice.</p>
       <div className="admin-table">
         {brands.map(b => (
           <div className="admin-table-row" key={b.name}>
@@ -220,9 +267,57 @@ function BrandsPanel({ brands }) {
               <span className="admin-brand-name">{b.name}</span>
               <span className="admin-hint">{b.count} producto{b.count !== 1 ? 's' : ''}</span>
             </div>
+            <div className="admin-actions">
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setRenaming(b); setRenamingValue(b.name) }}>Renombrar</button>
+              <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(b)}>Eliminar</button>
+            </div>
           </div>
         ))}
         {brands.length === 0 && <p className="no-results">Todavía no hay marcas.</p>}
+      </div>
+
+      {renaming && (
+        <div className="admin-modal-backdrop">
+          <form className="admin-modal admin-modal-sm" onSubmit={submitRename}>
+            <div className="admin-modal-head">
+              <h3>Renombrar marca</h3>
+              <button type="button" className="admin-close" onClick={() => setRenaming(null)} aria-label="Cerrar">✕</button>
+            </div>
+            <label className="admin-full">
+              Nuevo nombre
+              <input autoFocus value={renamingValue} onChange={e => setRenamingValue(e.target.value)} />
+            </label>
+            <div className="admin-modal-actions">
+              <button type="button" className="btn btn-ghost" onClick={() => setRenaming(null)} disabled={busy}>Cancelar</button>
+              <button type="submit" className="btn btn-primary" disabled={busy}>Guardar</button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function BrandDeleteDialog({ brand, busy, onDeleteProducts, onDeleteBrand, onCancel }) {
+  const count = brand.count
+  return (
+    <div className="admin-modal-backdrop admin-confirm-backdrop">
+      <div className="admin-confirm" role="dialog" aria-modal="true">
+        <span className="admin-confirm-icon">🗑️</span>
+        <h3>Eliminar marca "{brand.name}"</h3>
+        <p>{count} producto{count !== 1 ? 's' : ''} usa{count !== 1 ? 'n' : ''} esta marca. ¿Qué querés hacer?</p>
+        <div className="admin-confirm-options">
+          <button type="button" className="btn btn-danger" onClick={onDeleteProducts} disabled={busy}>
+            Eliminar también sus {count} producto{count !== 1 ? 's' : ''}
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={onDeleteBrand} disabled={busy}>
+            Solo quitar la marca (los productos quedan sin marca)
+          </button>
+        </div>
+        <button type="button" className="btn btn-ghost btn-block" onClick={onCancel} disabled={busy}>
+          Cancelar
+        </button>
+        {busy && <p className="admin-hint">Eliminando...</p>}
       </div>
     </div>
   )
@@ -274,6 +369,8 @@ function Admin() {
   const [toasts, setToasts] = useState([])
   const [pendingDelete, setPendingDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [pendingBrandDelete, setPendingBrandDelete] = useState(null)
+  const [brandDeleting, setBrandDeleting] = useState(false)
   const [facets, setFacets] = useState({ brands: [] })
   const [totalProducts, setTotalProducts] = useState(0)
   const [pagesCount, setPagesCount] = useState(1)
@@ -395,6 +492,51 @@ function Admin() {
     }
   }
 
+  const handleCreateBrand = async name => {
+    await api.createBrand(name)
+    notify(`Marca "${name}" creada`)
+    await loadFacets()
+  }
+
+  const handleRenameBrand = async (oldName, newName) => {
+    await api.renameBrand(oldName, newName)
+    notify(`Marca renombrada a "${newName}"`)
+    await Promise.all([loadPage(), loadFacets()])
+  }
+
+  const runBrandDelete = async (mode, successMsg, reloadProducts) => {
+    if (!pendingBrandDelete) return
+    setBrandDeleting(true)
+    try {
+      await api.deleteBrand(pendingBrandDelete.name, { products: mode })
+      notify(successMsg)
+      setPendingBrandDelete(null)
+      if (reloadProducts) {
+        await Promise.all([loadPage(), loadFacets()])
+      } else {
+        await loadFacets()
+      }
+    } catch (err) {
+      notify(err.message, 'danger')
+    } finally {
+      setBrandDeleting(false)
+    }
+  }
+
+  const deleteBrandWithProducts = () =>
+    runBrandDelete(
+      'delete',
+      `Marca "${pendingBrandDelete?.name}" y sus productos eliminados`,
+      true
+    )
+
+  const deleteBrandOnly = () =>
+    runBrandDelete(
+      'unbrand',
+      `Marca "${pendingBrandDelete?.name}" eliminada de los productos`,
+      true
+    )
+
   const logout = () => {
     setToken(null)
     setAuthed(false)
@@ -506,7 +648,14 @@ function Admin() {
         </div>
       )}
 
-      {tab === 'marcas' && <BrandsPanel brands={brandList} />}
+      {tab === 'marcas' && (
+        <BrandsPanel
+          brands={brandList}
+          onCreate={handleCreateBrand}
+          onRename={handleRenameBrand}
+          onDelete={setPendingBrandDelete}
+        />
+      )}
 
       {formOpen && (
         <ProductForm
@@ -525,6 +674,16 @@ function Admin() {
           busy={deleting}
           onConfirm={confirmDelete}
           onCancel={() => setPendingDelete(null)}
+        />
+      )}
+
+      {pendingBrandDelete && (
+        <BrandDeleteDialog
+          brand={pendingBrandDelete}
+          busy={brandDeleting}
+          onDeleteProducts={deleteBrandWithProducts}
+          onDeleteBrand={deleteBrandOnly}
+          onCancel={() => setPendingBrandDelete(null)}
         />
       )}
 

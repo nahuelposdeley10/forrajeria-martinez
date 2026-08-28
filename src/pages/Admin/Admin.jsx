@@ -208,7 +208,7 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
   )
 }
 
-function BrandsPanel({ brands, onCreate, onRename, onDelete }) {
+function BrandsPanel({ brands, search, page, total, pages, loading, onCreate, onRename, onDelete, onSearch, onPage }) {
   const [newName, setNewName] = useState('')
   const [renaming, setRenaming] = useState(null)
   const [renamingValue, setRenamingValue] = useState('')
@@ -244,6 +244,17 @@ function BrandsPanel({ brands, onCreate, onRename, onDelete }) {
     }
   }
 
+  const pageSafe = Math.min(page, pages)
+  const pageNumbers = pages > 1
+    ? Array.from({ length: pages }, (_, i) => i + 1)
+        .filter(p => p === 1 || p === pages || Math.abs(p - pageSafe) <= 2)
+        .reduce((acc, p, i, arr) => {
+          if (i > 0 && p - arr[i - 1] > 1) acc.push('…')
+          acc.push(p)
+          return acc
+        }, [])
+    : []
+
   return (
     <div className="admin-tab">
       <div className="admin-tab-head">
@@ -259,9 +270,18 @@ function BrandsPanel({ brands, onCreate, onRename, onDelete }) {
           </button>
         </form>
       </div>
-      <p className="admin-hint">Las marcas se listan según los productos del backoffice.</p>
+      <p className="admin-hint">Las marcas se listan según el backoffice.</p>
+      <div className="admin-brand-toolbar">
+        <input
+          className="admin-search"
+          placeholder="Buscar marca..."
+          value={search}
+          onChange={e => onSearch(e.target.value)}
+        />
+        <span className="results-count">{loading ? 'Cargando...' : `${total} marca${total !== 1 ? 's' : ''}`}</span>
+      </div>
       <div className="admin-table">
-        {brands.map(b => (
+        {!loading && brands.map(b => (
           <div className="admin-table-row" key={b.name}>
             <div className="admin-brand-info">
               <span className="admin-brand-name">{b.name}</span>
@@ -273,8 +293,25 @@ function BrandsPanel({ brands, onCreate, onRename, onDelete }) {
             </div>
           </div>
         ))}
-        {brands.length === 0 && <p className="no-results">Todavía no hay marcas.</p>}
+        {!loading && brands.length === 0 && <p className="no-results">No hay marcas.</p>}
+        {loading && <p className="no-results">Cargando marcas...</p>}
       </div>
+
+      {pages > 1 && (
+        <div className="pagination">
+          {pageNumbers.map((p, i) => (
+            <button
+              key={`${p}-${i}`}
+              type="button"
+              className={`page-btn ${p === pageSafe ? 'active' : ''}`}
+              onClick={() => typeof p === 'number' && onPage(p)}
+              disabled={typeof p !== 'number'}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
 
       {renaming && (
         <div className="admin-modal-backdrop">
@@ -373,6 +410,11 @@ function Admin() {
   const [brandDeleting, setBrandDeleting] = useState(false)
   const [facets, setFacets] = useState({ brands: [] })
   const [brands, setBrands] = useState([])
+  const [brandSearch, setBrandSearch] = useState('')
+  const [brandPage, setBrandPage] = useState(1)
+  const [brandTotal, setBrandTotal] = useState(0)
+  const [brandPages, setBrandPages] = useState(1)
+  const [brandLoading, setBrandLoading] = useState(false)
   const [totalProducts, setTotalProducts] = useState(0)
   const [pagesCount, setPagesCount] = useState(1)
   const toastId = useRef(0)
@@ -419,14 +461,23 @@ function Admin() {
     }
   }, [])
 
-  const loadBrands = useCallback(async () => {
+  const loadBrands = useCallback(async (overrides = {}) => {
+    const search = overrides.search !== undefined ? overrides.search : brandSearch
+    const page = overrides.page !== undefined ? overrides.page : brandPage
+    setBrandLoading(true)
     try {
-      const data = await api.fetchBrands()
+      const data = await api.fetchBrands({ search, page, limit: 20 })
       setBrands(data.brands)
+      setBrandTotal(data.total)
+      setBrandPages(Math.max(1, data.pages))
+      if (overrides.search !== undefined) setBrandSearch(overrides.search)
+      if (overrides.page !== undefined) setBrandPage(overrides.page)
     } catch {
       /* las marcas quedan vacías hasta que cargue */
+    } finally {
+      setBrandLoading(false)
     }
-  }, [])
+  }, [brandSearch, brandPage])
 
   const handleLogin = () => {
     setError('')
@@ -508,16 +559,18 @@ function Admin() {
     }
   }
 
+  const refreshBrands = () => loadBrands({ search: '', page: 1 })
+
   const handleCreateBrand = async name => {
     await api.createBrand(name)
     notify(`Marca "${name}" creada`)
-    await loadBrands()
+    await refreshBrands()
   }
 
   const handleRenameBrand = async (oldName, newName) => {
     await api.renameBrand(oldName, newName)
     notify(`Marca renombrada a "${newName}"`)
-    await Promise.all([loadPage(), loadFacets(), loadBrands()])
+    await Promise.all([loadPage(), loadFacets(), refreshBrands()])
   }
 
   const runBrandDelete = async (mode, successMsg, reloadProducts) => {
@@ -530,7 +583,7 @@ function Admin() {
       if (reloadProducts) {
         await Promise.all([loadPage(), loadFacets()])
       }
-      await loadBrands()
+      await refreshBrands()
     } catch (err) {
       notify(err.message, 'danger')
     } finally {
@@ -560,6 +613,11 @@ function Admin() {
     setPagesCount(1)
     setFacets({ brands: [] })
     setBrands([])
+    setBrandSearch('')
+    setBrandPage(1)
+    setBrandTotal(0)
+    setBrandPages(1)
+    setBrandLoading(false)
     setSearch('')
     setBrandFilter('')
     setCatFilter('')
@@ -667,9 +725,16 @@ function Admin() {
       {tab === 'marcas' && (
         <BrandsPanel
           brands={brands}
+          search={brandSearch}
+          page={brandPage}
+          total={brandTotal}
+          pages={brandPages}
+          loading={brandLoading}
           onCreate={handleCreateBrand}
           onRename={handleRenameBrand}
           onDelete={setPendingBrandDelete}
+          onSearch={v => { setBrandPage(1); setBrandSearch(v) }}
+          onPage={setBrandPage}
         />
       )}
 

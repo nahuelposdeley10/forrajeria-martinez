@@ -90,7 +90,14 @@ export const api = {
     return request('/upload', { method: 'POST', body: fd })
   },
 
-  fetchBrands: () => request('/brands'),
+  fetchBrands: (params = {}) => {
+    const sp = new URLSearchParams()
+    if (params.search) sp.set('search', params.search)
+    if (params.page) sp.set('page', params.page)
+    if (params.limit) sp.set('limit', params.limit)
+    const qs = sp.toString()
+    return request(`/brands${qs ? `?${qs}` : ''}`)
+  },
 
   createBrand: name =>
     request('/brands', {

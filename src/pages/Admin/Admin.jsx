@@ -372,6 +372,7 @@ function Admin() {
   const [pendingBrandDelete, setPendingBrandDelete] = useState(null)
   const [brandDeleting, setBrandDeleting] = useState(false)
   const [facets, setFacets] = useState({ brands: [] })
+  const [brands, setBrands] = useState([])
   const [totalProducts, setTotalProducts] = useState(0)
   const [pagesCount, setPagesCount] = useState(1)
   const toastId = useRef(0)
@@ -418,6 +419,15 @@ function Admin() {
     }
   }, [])
 
+  const loadBrands = useCallback(async () => {
+    try {
+      const data = await api.fetchBrands()
+      setBrands(data.brands)
+    } catch {
+      /* las marcas quedan vacías hasta que cargue */
+    }
+  }, [])
+
   const handleLogin = () => {
     setError('')
     setAuthed(true)
@@ -436,6 +446,12 @@ function Admin() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadFacets()
   }, [authed, loadFacets])
+
+  useEffect(() => {
+    if (!authed) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadBrands()
+  }, [authed, loadBrands])
 
   const brandList = facets.brands
 
@@ -495,13 +511,13 @@ function Admin() {
   const handleCreateBrand = async name => {
     await api.createBrand(name)
     notify(`Marca "${name}" creada`)
-    await loadFacets()
+    await loadBrands()
   }
 
   const handleRenameBrand = async (oldName, newName) => {
     await api.renameBrand(oldName, newName)
     notify(`Marca renombrada a "${newName}"`)
-    await Promise.all([loadPage(), loadFacets()])
+    await Promise.all([loadPage(), loadFacets(), loadBrands()])
   }
 
   const runBrandDelete = async (mode, successMsg, reloadProducts) => {
@@ -513,9 +529,8 @@ function Admin() {
       setPendingBrandDelete(null)
       if (reloadProducts) {
         await Promise.all([loadPage(), loadFacets()])
-      } else {
-        await loadFacets()
       }
+      await loadBrands()
     } catch (err) {
       notify(err.message, 'danger')
     } finally {
@@ -544,6 +559,7 @@ function Admin() {
     setTotalProducts(0)
     setPagesCount(1)
     setFacets({ brands: [] })
+    setBrands([])
     setSearch('')
     setBrandFilter('')
     setCatFilter('')
@@ -650,7 +666,7 @@ function Admin() {
 
       {tab === 'marcas' && (
         <BrandsPanel
-          brands={brandList}
+          brands={brands}
           onCreate={handleCreateBrand}
           onRename={handleRenameBrand}
           onDelete={setPendingBrandDelete}
@@ -660,7 +676,7 @@ function Admin() {
       {formOpen && (
         <ProductForm
           initial={editing}
-          brandList={brandList}
+          brandList={brands}
           onSubmit={submitForm}
           onClose={() => setFormOpen(false)}
         />

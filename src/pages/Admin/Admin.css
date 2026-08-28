@@ -541,6 +541,22 @@
   flex-wrap: wrap;
 }
 
+.admin-brand-toolbar .admin-search {
+  flex: 1 1 220px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: var(--font);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+}
+
+.admin-brand-toolbar .admin-search:focus {
+  border-color: var(--accent);
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
   .toast-container {

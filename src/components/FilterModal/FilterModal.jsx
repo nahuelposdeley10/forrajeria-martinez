@@ -3,14 +3,14 @@ import { categories } from '../../data/products/products'
 import { STAGE_TAGS, SIZE_TAGS } from '../../data/filters/filters'
 import './FilterModal.css'
 
-export default function FilterModal({ open, initial, facets, onApply, onClose }) {
+export default function FilterModal({ open, initial, facets, brands = [], onApply, onClose }) {
   const [category, setCategory] = useState(initial.category)
   const [marca, setMarca] = useState(initial.marca)
   const [etapa, setEtapa] = useState(initial.etapa)
   const [tamano, setTamano] = useState(initial.tamano)
   const [raza, setRaza] = useState(initial.raza)
 
-  const brandOptions = facets?.brands || []
+  const brandOptions = brands.length > 0 ? brands : facets?.brands || []
   const breedOptions = facets?.breeds || []
 
   if (!open) return null

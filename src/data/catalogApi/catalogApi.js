@@ -43,5 +43,8 @@ export const catalogApi = {
   fetchFacets: (params = {}) =>
     request(`/products/facets${buildQuery({ active: 'true', ...params })}`),
 
+  fetchBrands: (limit = 200) =>
+    request(`/brands?limit=${limit}`),
+
   fetchProduct: id => request(`/products/${id}`),
 }

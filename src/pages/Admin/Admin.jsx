@@ -146,10 +146,12 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
           </label>
           <label>
             Marca
-            <input list="admin-brand-list" value={form.brand} onChange={e => set('brand', e.target.value)} placeholder="Elegí o escribí una marca nueva" />
-            <datalist id="admin-brand-list">
-              {brandList.map(b => <option key={b.name} value={b.name} />)}
-            </datalist>
+            <select value={form.brand} onChange={e => set('brand', e.target.value)}>
+              <option value="">Sin marca</option>
+              {brandList.map(b => (
+                <option key={b.name} value={b.name}>{b.name}</option>
+              ))}
+            </select>
           </label>
           <label>
             Categoría
@@ -410,6 +412,7 @@ function Admin() {
   const [brandDeleting, setBrandDeleting] = useState(false)
   const [facets, setFacets] = useState({ brands: [] })
   const [brands, setBrands] = useState([])
+  const [allBrands, setAllBrands] = useState([])
   const [brandSearch, setBrandSearch] = useState('')
   const [brandPage, setBrandPage] = useState(1)
   const [brandTotal, setBrandTotal] = useState(0)
@@ -479,6 +482,15 @@ function Admin() {
     }
   }, [brandSearch, brandPage])
 
+  const loadAllBrands = useCallback(async () => {
+    try {
+      const data = await api.fetchBrands({ limit: 200 })
+      setAllBrands(data.brands)
+    } catch {
+      /* si falla, el formulario queda con la lista previa */
+    }
+  }, [])
+
   const handleLogin = () => {
     setError('')
     setAuthed(true)
@@ -513,11 +525,13 @@ function Admin() {
   const openNew = () => {
     setEditing(null)
     setFormOpen(true)
+    loadAllBrands()
   }
 
   const openEdit = p => {
     setEditing(p)
     setFormOpen(true)
+    loadAllBrands()
   }
 
   const submitForm = async data => {
@@ -676,7 +690,7 @@ function Admin() {
                 <img src={p.image || '/products/placeholder.jpg'} alt="" className="admin-thumb" />
                 <div className="admin-product-info">
                   <span className="admin-product-name">{p.name}</span>
-                  <span className="admin-hint">{p.brand || 'General'} · {p.category}{!p.active ? ' · oculto' : ''}</span>
+                  <span className="admin-hint">{p.brand || 'Sin marca'} · {p.category}{!p.active ? ' · oculto' : ''}</span>
                 </div>
                 <span className="admin-price">{formatPrice(p.price)}</span>
                 <input
@@ -741,7 +755,7 @@ function Admin() {
       {formOpen && (
         <ProductForm
           initial={editing}
-          brandList={brands}
+          brandList={allBrands}
           onSubmit={submitForm}
           onClose={() => setFormOpen(false)}
         />

@@ -53,6 +53,7 @@ function Products() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [facets, setFacets] = useState(null)
+  const [brandOptions, setBrandOptions] = useState([])
   const PAGE_SIZE = 12
   const gridRef = useRef(null)
   const latestReq = useRef(0)
@@ -101,6 +102,19 @@ function Products() {
       alive = false
     }
   }, [activeCategory])
+
+  useEffect(() => {
+    let alive = true
+    catalogApi
+      .fetchBrands()
+      .then(data => {
+        if (alive) setBrandOptions(data.brands)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const total = data.total
   const totalPages = Math.max(1, data.pages)
@@ -213,7 +227,7 @@ function Products() {
                   <img src={product.image || '/products/placeholder.jpg'} alt={product.name} loading="lazy" className={product.stock <= 0 ? 'out' : ''} />
                 </Link>
                 <div className="product-info">
-                  <span className="product-category">{product.brand || product.category}</span>
+                  <span className="product-category">{product.brand || 'Sin marca'}</span>
                   <h3>{product.name}</h3>
                   <p>{product.description}</p>
                   <div className="product-footer">
@@ -261,6 +275,7 @@ function Products() {
         open={filtersOpen}
         initial={{ category: activeCategory, marca, etapa, tamano, raza }}
         facets={facets}
+        brands={brandOptions}
         onApply={applyFilters}
         onClose={() => setFiltersOpen(false)}
       />

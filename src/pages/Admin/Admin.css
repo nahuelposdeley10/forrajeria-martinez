@@ -541,11 +541,6 @@
   flex-wrap: wrap;
 }
 
-.admin-brand-toolbar .admin-search {
-  flex: 1 1 220px;
-  max-width: 320px;
-}
-
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
   .toast-container {

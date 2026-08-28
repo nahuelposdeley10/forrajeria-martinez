@@ -1,3 +1,5 @@
+import './style.css'
+
 export function flyToCart({ image, from, to, size = 90 }) {
   if (!image || !from || !to) return
 

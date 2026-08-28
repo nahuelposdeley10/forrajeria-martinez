@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CartContext } from './CartContext'
-import { formatPrice } from '../data/products'
+import { formatPrice } from '../../data/products/products'
 
 const STORAGE_KEY = 'forrajeria-cart'
 const WHATSAPP_NUMBER = '5491130674658'

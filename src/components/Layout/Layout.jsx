@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { WHATSAPP_NUMBER } from '../data/products'
-import { useCart } from '../context/CartContext'
+import { WHATSAPP_NUMBER } from '../../data/products/products'
+import { useCart } from '../../context/Cart/CartContext'
+import './Layout.css'
 
 export function WhatsAppIcon() {
   return (

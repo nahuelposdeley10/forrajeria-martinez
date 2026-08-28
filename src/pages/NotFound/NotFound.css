@@ -1,0 +1,65 @@
+/* ============ 404 ============ */
+.notfound-section {
+  padding: 80px 24px 100px;
+}
+
+.notfound-card {
+  max-width: 560px;
+  margin: 0 auto;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 48px 32px;
+}
+
+.notfound-code {
+  display: block;
+  font-size: 88px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.notfound-emoji {
+  display: block;
+  font-size: 36px;
+  margin: 16px 0 8px;
+}
+
+.notfound-card h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-heading);
+  margin-bottom: 12px;
+}
+
+.notfound-card p {
+  font-size: 15px;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.notfound-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+  .notfound-section {
+    padding: 48px 16px 72px;
+  }
+
+  .notfound-code {
+    font-size: 64px;
+  }
+}

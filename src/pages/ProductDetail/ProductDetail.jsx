@@ -1,16 +1,55 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
-import { products, formatPrice, WHATSAPP_NUMBER } from '../data/products'
-import { WhatsAppIcon } from '../components/Layout'
-import { useCart } from '../context/CartContext'
-import { flyToCart } from '../utils/flyToCart'
+import { formatPrice, WHATSAPP_NUMBER } from '../../data/products/products'
+import { catalogApi } from '../../data/catalogApi/catalogApi'
+import { WhatsAppIcon } from '../../components/Layout/Layout'
+import { DetailSkeleton } from '../../components/Skeleton/Skeleton'
+import { useCart } from '../../context/Cart/CartContext'
+import { flyToCart } from '../../utils/flyToCart/flyToCart'
+import './ProductDetail.css'
 
 export default function ProductDetail() {
   const { id } = useParams()
-  const product = products.find(p => p.id === Number(id))
+  const [product, setProduct] = useState(null)
+  const [related, setRelated] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
   const { addItem } = useCart()
   const [justAdded, setJustAdded] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    let alive = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true)
+    setNotFound(false)
+    setProduct(null)
+    setRelated([])
+
+    catalogApi
+      .fetchProduct(id)
+      .then(async res => {
+        const p = res.product
+        if (!alive) return
+        setProduct(p)
+        try {
+          const rel = await catalogApi.fetchProducts({ category: p.category, limit: 3 })
+          if (alive) setRelated(rel.products.filter(x => x.id !== p.id).slice(0, 3))
+        } catch {
+          /* relacionados opcionales */
+        }
+      })
+      .catch(() => {
+        if (alive) setNotFound(true)
+      })
+      .finally(() => {
+        if (alive) setLoading(false)
+      })
+
+    return () => {
+      alive = false
+    }
+  }, [id])
 
   const goBackToProducts = () => {
     navigate('/')
@@ -29,13 +68,23 @@ export default function ProductDetail() {
     window.setTimeout(() => setJustAdded(false), 1500)
   }
 
-  if (!product) {
-    return <Navigate to="/" replace />
+  if (loading && !product) {
+    return (
+      <>
+        <div className="detail-hero-spacer"></div>
+        <section className="detail-section">
+          <div className="section-container">
+            <span className="detail-back">← Volver a productos</span>
+            <DetailSkeleton />
+          </div>
+        </section>
+      </>
+    )
   }
 
-  const related = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 3)
+  if (notFound || !product) {
+    return <Navigate to="/" replace />
+  }
 
   const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     `Hola! Quiero consultar por: ${product.name} (${formatPrice(product.price)})`
@@ -53,7 +102,8 @@ export default function ProductDetail() {
           <div className="detail-grid">
             <div className="detail-media">
               {product.badge && <span className="product-badge">{product.badge}</span>}
-              <img src={product.image} alt={product.name} />
+              {product.stock <= 0 && <span className="product-badge product-badge-stock">Sin stock</span>}
+              <img src={product.image || '/products/placeholder.jpg'} alt={product.name} className={product.stock <= 0 ? 'out' : ''} />
             </div>
 
             <div className="detail-content">
@@ -61,7 +111,12 @@ export default function ProductDetail() {
               <h1>{product.name}</h1>
               <p className="detail-description">{product.description}</p>
 
-              <div className="detail-price">{formatPrice(product.price)}</div>
+              <div className="detail-price">
+                {formatPrice(product.price)}
+                {product.stock <= 0 && (
+                  <span className="detail-stock">{product.stock === 0 ? 'Sin stock' : `${product.stock} disponibles`}</span>
+                )}
+              </div>
 
               <div className="detail-features">
                 <h3>Características</h3>
@@ -76,8 +131,11 @@ export default function ProductDetail() {
                 <button
                   className="btn btn-primary"
                   onClick={handleAdd}
+                  disabled={product.stock <= 0}
                 >
-                  {justAdded ? '✓ Agregado al carrito' : '🛒 Agregar al carrito'}
+                  {product.stock <= 0
+                    ? 'Sin stock'
+                    : justAdded ? '✓ Agregado al carrito' : '🛒 Agregar al carrito'}
                 </button>
                 <a
                   href={waLink}
@@ -102,7 +160,8 @@ export default function ProductDetail() {
               {related.map(product => (
                 <div key={product.id} className="product-card">
                   <Link to={`/producto/${product.id}`} className="product-media">
-                    <img src={product.image} alt={product.name} loading="lazy" />
+                    {product.stock <= 0 && <span className="product-badge product-badge-stock">Sin stock</span>}
+                    <img src={product.image || '/products/placeholder.jpg'} alt={product.name} loading="lazy" className={product.stock <= 0 ? 'out' : ''} />
                   </Link>
                   <div className="product-info">
                     <span className="product-category">{product.brand || product.category}</span>

@@ -1,11 +1,13 @@
 import { Routes, Route, Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
-import { Navbar, Footer, FloatingWhatsApp } from './components/Layout'
-import Cart from './components/Cart'
-import { useCart } from './context/CartContext'
-import Home from './pages/Home'
-import ProductDetail from './pages/ProductDetail'
+import { Navbar, Footer, FloatingWhatsApp } from './components/Layout/Layout'
+import Cart from './components/Cart/Cart'
+import { useCart } from './context/Cart/CartContext'
+import Home from './pages/Home/Home'
+import ProductDetail from './pages/ProductDetail/ProductDetail'
+import Admin from './pages/Admin/Admin'
+import NotFound from './pages/NotFound/NotFound'
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -50,6 +52,8 @@ function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/producto/:id" element={<ProductDetail />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )

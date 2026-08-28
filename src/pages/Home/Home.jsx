@@ -1,9 +1,11 @@
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { products, categories, formatPrice, WHATSAPP_NUMBER } from '../data/products'
-import { STAGE_TAGS, SIZE_TAGS, BREED_DEFS, toKey } from '../data/filters'
-import FilterModal from '../components/FilterModal'
-import { WhatsAppIcon } from '../components/Layout'
+import { categories, formatPrice, WHATSAPP_NUMBER } from '../../data/products/products'
+import { catalogApi } from '../../data/catalogApi/catalogApi'
+import FilterModal from '../../components/FilterModal/FilterModal'
+import { ProductGridSkeleton } from '../../components/Skeleton/Skeleton'
+import { WhatsAppIcon } from '../../components/Layout/Layout'
+import './Home.css'
 
 function Hero() {
   return (
@@ -47,44 +49,63 @@ function Products() {
   const [tamano, setTamano] = useState('todos')
   const [raza, setRaza] = useState('todos')
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [data, setData] = useState({ products: [], total: 0, pages: 1 })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [facets, setFacets] = useState(null)
   const PAGE_SIZE = 12
   const gridRef = useRef(null)
+  const latestReq = useRef(0)
 
-  const filtered = useMemo(() => {
-    const q = toKey(search).trim()
-    let list = activeCategory === 'todos'
-      ? products
-      : products.filter(p => p.category === activeCategory)
+  const load = useCallback(async () => {
+    const req = ++latestReq.current
+    setLoading(true)
+    setError('')
+    try {
+      const res = await catalogApi.fetchProducts({
+        category: activeCategory,
+        brand: marca,
+        stage: etapa,
+        size: tamano,
+        breed: raza,
+        search,
+        page,
+        limit: PAGE_SIZE,
+      })
+      if (req !== latestReq.current) return
+      setData({ products: res.products, total: res.total, pages: res.pages })
+      if (res.pages > 0 && res.page > res.pages) setPage(res.pages)
+    } catch (err) {
+      if (req !== latestReq.current) return
+      setError(err.message)
+      setData({ products: [], total: 0, pages: 1 })
+    } finally {
+      if (req === latestReq.current) setLoading(false)
+    }
+  }, [activeCategory, marca, etapa, tamano, raza, search, page])
 
-    if (marca !== 'todos') {
-      list = list.filter(p => p.brand === marca)
-    }
-    if (etapa !== 'todos') {
-      const tag = STAGE_TAGS.find(t => t.key === etapa)
-      if (tag) list = list.filter(p => tag.re.test(toKey(p.name)))
-    }
-    if (tamano !== 'todos') {
-      const tag = SIZE_TAGS.find(t => t.key === tamano)
-      if (tag) list = list.filter(p => tag.re.test(toKey(p.name)))
-    }
-    if (raza !== 'todos') {
-      const def = BREED_DEFS.find(b => b.key === raza)
-      if (def) list = list.filter(p => def.re.test(toKey(p.name)))
-    }
-    if (q) {
-      list = list.filter(p =>
-        toKey(p.name).includes(q) ||
-        toKey(p.brand).includes(q) ||
-        toKey(p.category).includes(q) ||
-        toKey(p.description).includes(q)
-      )
-    }
-    return list
-  }, [activeCategory, search, marca, etapa, tamano, raza])
+  useEffect(() => {
+    const t = setTimeout(load, page > 1 ? 0 : 250)
+    return () => clearTimeout(t)
+  }, [load, page])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  useEffect(() => {
+    let alive = true
+    catalogApi
+      .fetchFacets({ category: activeCategory === 'todos' ? undefined : activeCategory })
+      .then(f => {
+        if (alive) setFacets(f)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [activeCategory])
+
+  const total = data.total
+  const totalPages = Math.max(1, data.pages)
   const current = Math.min(page, totalPages)
-  const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
+  const visible = data.products
   const activeFilterCount = (activeCategory !== 'todos' ? 1 : 0) +
     (marca !== 'todos' ? 1 : 0) +
     (etapa !== 'todos' ? 1 : 0) +
@@ -163,9 +184,24 @@ function Products() {
           ))}
         </div>
 
-        <p className="results-count">{filtered.length} producto{filtered.length !== 1 ? 's' : ''}</p>
+        <p className="results-count">
+          {error
+            ? 'Error al cargar productos.'
+            : loading
+              ? 'Cargando...'
+              : `${total} producto${total !== 1 ? 's' : ''}`}
+        </p>
 
-        {visible.length === 0 ? (
+        {error ? (
+          <p className="no-results">
+            No se pudo conectar con el servidor.
+            <button type="button" className="page-btn" onClick={load} style={{ marginLeft: '10px' }}>
+              Reintentar
+            </button>
+          </p>
+        ) : loading ? (
+          <ProductGridSkeleton count={PAGE_SIZE} />
+        ) : visible.length === 0 ? (
           <p className="no-results">No encontramos productos para tu busqueda.</p>
         ) : (
           <div className="products-grid" ref={gridRef}>
@@ -173,7 +209,8 @@ function Products() {
               <div key={product.id} className="product-card">
                 <Link to={`/producto/${product.id}`} className="product-media">
                   {product.badge && <span className="product-badge">{product.badge}</span>}
-                  <img src={product.image} alt={product.name} loading="lazy" />
+                  {product.stock <= 0 && <span className="product-badge product-badge-stock">Sin stock</span>}
+                  <img src={product.image || '/products/placeholder.jpg'} alt={product.name} loading="lazy" className={product.stock <= 0 ? 'out' : ''} />
                 </Link>
                 <div className="product-info">
                   <span className="product-category">{product.brand || product.category}</span>
@@ -223,6 +260,7 @@ function Products() {
         key={filtersOpen ? 'open' : 'closed'}
         open={filtersOpen}
         initial={{ category: activeCategory, marca, etapa, tamano, raza }}
+        facets={facets}
         onApply={applyFilters}
         onClose={() => setFiltersOpen(false)}
       />

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
-import { formatPrice } from '../data/products'
-import { WhatsAppIcon } from './Layout'
+import { useCart } from '../../context/Cart/CartContext'
+import { formatPrice } from '../../data/products/products'
+import { WhatsAppIcon } from '../Layout/Layout'
+import './Cart.css'
 
 export default function Cart({ open, onClose, addedId }) {
   const { items, total, count, removeItem, updateQty, clearCart, buildWhatsAppMessage } = useCart()

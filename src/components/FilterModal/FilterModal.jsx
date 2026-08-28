@@ -1,24 +1,17 @@
-import { useMemo, useState } from 'react'
-import { products, categories } from '../data/products'
-import { STAGE_TAGS, SIZE_TAGS, BREED_DEFS, toKey } from '../data/filters'
+import { useState } from 'react'
+import { categories } from '../../data/products/products'
+import { STAGE_TAGS, SIZE_TAGS } from '../../data/filters/filters'
+import './FilterModal.css'
 
-export default function FilterModal({ open, initial, onApply, onClose }) {
+export default function FilterModal({ open, initial, facets, onApply, onClose }) {
   const [category, setCategory] = useState(initial.category)
   const [marca, setMarca] = useState(initial.marca)
   const [etapa, setEtapa] = useState(initial.etapa)
   const [tamano, setTamano] = useState(initial.tamano)
   const [raza, setRaza] = useState(initial.raza)
 
-  const brandOptions = useMemo(() => {
-    const counts = {}
-    products.forEach(p => { counts[p.brand] = (counts[p.brand] || 0) + 1 })
-    return Object.keys(counts).sort((a, b) => counts[b] - counts[a])
-  }, [])
-
-  const breedOptions = useMemo(
-    () => BREED_DEFS.filter(d => products.some(p => d.re.test(toKey(p.name)))),
-    []
-  )
+  const brandOptions = facets?.brands || []
+  const breedOptions = facets?.breeds || []
 
   if (!open) return null
 
@@ -68,7 +61,7 @@ export default function FilterModal({ open, initial, onApply, onClose }) {
             >
               <option value="todos">Todas las marcas</option>
               {brandOptions.map(b => (
-                <option key={b} value={b}>{b}</option>
+                <option key={b.name} value={b.name}>{b.name}</option>
               ))}
             </select>
           </div>

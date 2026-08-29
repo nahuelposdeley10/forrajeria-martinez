@@ -313,6 +313,30 @@
   color: var(--text);
 }
 
+.admin-form-grid input,
+.admin-form-grid select,
+.admin-full input,
+.admin-full textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: var(--font);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.admin-form-grid input:focus,
+.admin-form-grid select:focus,
+.admin-full input:focus,
+.admin-full textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(244, 114, 55, 0.15);
+}
+
 .admin-full {
   display: flex;
   flex-direction: column;

@@ -9,6 +9,24 @@ import { flyToCart } from '../../utils/flyToCart/flyToCart'
 import { setSEO, setJsonLd, SITE_URL, SITE_NAME } from '../../utils/seo/seo'
 import './ProductDetail.css'
 
+const SHIPPING_OPTIONS = [
+  {
+    icon: '🚚',
+    title: 'Envío a Domicilio',
+    description: 'Envío gratis a partir de $32.000 en CABA y zonas de GBA.',
+  },
+  {
+    icon: '⚡',
+    title: 'Envío Flash',
+    description: 'Pedidos entre las 9 am y las 8 pm llegan en menos de 3 horas.',
+  },
+  {
+    icon: '🏬',
+    title: 'Retiro en Sucursal',
+    description: 'Retirá sin cargo por nuestra sucursal, coordinando por WhatsApp.',
+  },
+]
+
 export default function ProductDetail() {
   const { id } = useParams()
   const [product, setProduct] = useState(null)
@@ -133,22 +151,12 @@ export default function ProductDetail() {
             <div className="detail-content">
               <span className="product-category">{product.brand || product.category}</span>
               <h1>{product.name}</h1>
-              <p className="detail-description">{product.description}</p>
 
               <div className="detail-price">
                 {formatPrice(product.price)}
                 {product.stock <= 0 && (
                   <span className="detail-stock">{product.stock === 0 ? 'Sin stock' : `${product.stock} disponibles`}</span>
                 )}
-              </div>
-
-              <div className="detail-features">
-                <h3>Características</h3>
-                <ul>
-                  {product.details.map((d, i) => (
-                    <li key={i}>{d}</li>
-                  ))}
-                </ul>
               </div>
 
               <div className="detail-actions">
@@ -170,6 +178,62 @@ export default function ProductDetail() {
                   <WhatsAppIcon /> Consultar por WhatsApp
                 </a>
               </div>
+
+              <div className="detail-shipping">
+                <span className="detail-subtitle">Opciones de envío:</span>
+                <div className="detail-shipping-list">
+                  {SHIPPING_OPTIONS.map((s, i) => (
+                    <div className="detail-shipping-item" key={i}>
+                      <span className="detail-shipping-icon">{s.icon}</span>
+                      <div className="detail-shipping-text">
+                        <strong>{s.title}</strong>
+                        <p>{s.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="detail-block">
+                <span className="detail-subtitle">Descripción</span>
+                <p className="detail-description">{product.description}</p>
+              </div>
+
+              <div className="detail-features detail-benefits">
+                <h3>Beneficios</h3>
+                <ul>
+                  {(product.benefits || []).map((b, i) => (
+                    <li key={i}>{b}</li>
+                  ))}
+                </ul>
+
+                {product.ingredients && product.ingredients.length > 0 && (
+                  <>
+                    <h3 className="detail-benefits-subhead">Ingredientes</h3>
+                    <ul className="detail-ingredients">
+                      {product.ingredients.map((item, i) => (
+                        <li key={i}>{item}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+
+              {product.specifications && product.specifications.length > 0 && (
+                <div className="detail-block">
+                  <span className="detail-subtitle">Especificaciones</span>
+                  <table className="detail-specs-table">
+                    <tbody>
+                      {product.specifications.map((spec, i) => (
+                        <tr key={i}>
+                          <td>{spec.label}</td>
+                          <td>{spec.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>

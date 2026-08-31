@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { categories, formatPrice, WHATSAPP_NUMBER } from '../../data/products/products'
 import { catalogApi } from '../../data/catalogApi/catalogApi'
+import { useCart } from '../../context/Cart/CartContext'
 import FilterModal from '../../components/FilterModal/FilterModal'
 import { ProductGridSkeleton } from '../../components/Skeleton/Skeleton'
 import { WhatsAppIcon } from '../../components/Layout/Layout'
@@ -60,6 +61,7 @@ function Products() {
   const [brandOptions, setBrandOptions] = useState([])
   const PAGE_SIZE = 12
   const gridRef = useRef(null)
+  const { addItem } = useCart()
   const latestReq = useRef(0)
 
   const load = useCallback(async () => {
@@ -260,9 +262,13 @@ function Products() {
                     : product.description}</p>
                   <div className="product-footer">
                     <span className="product-price">{formatPrice(product.price)}</span>
-                    <Link to={`/producto/${product.id}`} className="btn btn-detail-sm">
-                      Ver detalle
-                    </Link>
+                    <button
+                      type="button"
+                      className="btn btn-detail-sm"
+                      onClick={() => addItem(product)}
+                    >
+                      Agregar producto
+                    </button>
                   </div>
                 </div>
               </div>

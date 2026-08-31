@@ -139,11 +139,6 @@
   font-size: 13px;
 }
 
-.foodtype-filters .filter-btn.active {
-  background: #16a34a;
-  border-color: #16a34a;
-}
-
 /* ============ PRODUCT TOOLS ============ */
 .product-tools {
   display: flex;

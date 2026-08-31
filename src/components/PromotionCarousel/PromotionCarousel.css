@@ -145,8 +145,16 @@
 }
 
 @media (max-width: 768px) {
+  .promo-carousel {
+    max-width: 100%;
+    width: 100%;
+    padding: 0;
+    border-radius: 0;
+  }
+
   .promo-slide {
     min-height: 200px;
+    border-radius: 0;
   }
 
   .promo-slide-body {

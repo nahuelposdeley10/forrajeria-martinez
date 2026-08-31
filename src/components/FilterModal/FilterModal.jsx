@@ -13,7 +13,6 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
   const [sort, setSort] = useState(initial.sort)
 
   const brandOptions = brands.length > 0 ? brands : facets?.brands || []
-  const breedOptions = facets?.breeds || []
 
   if (!open) return null
 
@@ -147,22 +146,6 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
                   </button>
                 ))}
               </div>
-            </div>
-          )}
-
-          {breedOptions.length > 0 && (
-            <div className="filter-modal-group">
-              <span className="filter-label">Raza</span>
-              <select
-                className="filter-select"
-                value={raza}
-                onChange={e => setRaza(e.target.value)}
-              >
-                <option value="todos">Todas las razas</option>
-                {breedOptions.map(b => (
-                  <option key={b.key} value={b.key}>{b.label}</option>
-                ))}
-              </select>
             </div>
           )}
         </div>

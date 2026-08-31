@@ -101,61 +101,6 @@
   border-color: var(--accent);
 }
 
-.filter-brand-search {
-  position: relative;
-}
-
-.filter-brand-input {
-  cursor: text;
-}
-
-.filter-brand-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 20;
-  max-height: 220px;
-  overflow-y: auto;
-  background: var(--bg-card);
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  box-shadow: var(--shadow-lg);
-  padding: 6px;
-}
-
-.filter-brand-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 9px 12px;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: 8px;
-  font-family: var(--font);
-}
-
-.filter-brand-item:hover {
-  background: rgba(249, 115, 22, 0.1);
-  color: var(--accent);
-}
-
-.filter-brand-item.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.filter-brand-empty {
-  display: block;
-  padding: 9px 12px;
-  color: var(--text-light);
-  font-size: 14px;
-}
-
 .filter-chip {
   padding: 8px 16px;
   border-radius: 50px;

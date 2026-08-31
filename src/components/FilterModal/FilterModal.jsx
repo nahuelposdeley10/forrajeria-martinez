@@ -10,6 +10,8 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
   const [tamano, setTamano] = useState(initial.tamano)
   const [raza, setRaza] = useState(initial.raza)
   const [sort, setSort] = useState(initial.sort)
+  const [marcaInput, setMarcaInput] = useState(initial.marca === 'todos' ? '' : initial.marca)
+  const [marcaOpen, setMarcaOpen] = useState(false)
 
   const brandOptions = brands.length > 0 ? brands : facets?.brands || []
   const breedOptions = facets?.breeds || []
@@ -19,6 +21,8 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
   const reset = () => {
     setCategory('todos')
     setMarca('todos')
+    setMarcaInput('')
+    setMarcaOpen(false)
     setEtapa('todos')
     setTamano('todos')
     setRaza('todos')
@@ -33,6 +37,16 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
     raza,
     sort,
   })
+
+  const selectMarca = name => {
+    setMarca(name === '' ? 'todos' : name)
+    setMarcaInput(name)
+    setMarcaOpen(false)
+  }
+
+  const filteredBrands = brandOptions.filter(b =>
+    b.name.toLowerCase().includes(marcaInput.toLowerCase())
+  )
 
   return (
     <>
@@ -76,16 +90,45 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
 
           <div className="filter-modal-group">
             <span className="filter-label">Marca</span>
-            <select
-              className="filter-select"
-              value={marca}
-              onChange={e => setMarca(e.target.value)}
-            >
-              <option value="todos">Todas las marcas</option>
-              {brandOptions.map(b => (
-                <option key={b.name} value={b.name}>{b.name}</option>
-              ))}
-            </select>
+            <div className="filter-brand-search">
+              <input
+                className="filter-select filter-brand-input"
+                type="text"
+                value={marcaInput}
+                placeholder="Escribí para buscar una marca..."
+                onChange={e => {
+                  setMarcaInput(e.target.value)
+                  setMarcaOpen(true)
+                  if (e.target.value === '') setMarca('todos')
+                }}
+                onFocus={() => setMarcaOpen(true)}
+                onBlur={() => setTimeout(() => setMarcaOpen(false), 150)}
+              />
+              {marcaOpen && (
+                <div className="filter-brand-dropdown">
+                  <button
+                    type="button"
+                    className={`filter-brand-item ${marca === 'todos' ? 'active' : ''}`}
+                    onMouseDown={() => selectMarca('')}
+                  >
+                    Todas las marcas
+                  </button>
+                  {filteredBrands.map(b => (
+                    <button
+                      key={b.name}
+                      type="button"
+                      className={`filter-brand-item ${marca === b.name ? 'active' : ''}`}
+                      onMouseDown={() => selectMarca(b.name)}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                  {filteredBrands.length === 0 && (
+                    <span className="filter-brand-empty">Sin resultados</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="filter-modal-group">

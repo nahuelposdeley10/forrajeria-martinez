@@ -103,6 +103,19 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
 
   const set = (key, value) => setForm(f => ({ ...f, [key]: value }))
 
+  const [brandInput, setBrandInput] = useState(form.brand)
+  const [brandOpen, setBrandOpen] = useState(false)
+
+  const filteredBrands = brandList
+    .map(b => b.name)
+    .filter(name => name.toLowerCase().includes(brandInput.toLowerCase()))
+
+  const selectBrand = name => {
+    setBrandInput(name)
+    set('brand', name)
+    setBrandOpen(false)
+  }
+
   const handleFile = async file => {
     if (!file) return
     if (file.size > IMAGE_MAX) {
@@ -170,12 +183,40 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
           </label>
           <label>
             Marca
-            <select value={form.brand} onChange={e => set('brand', e.target.value)}>
-              <option value="">Sin marca</option>
-              {brandList.map(b => (
-                <option key={b.name} value={b.name}>{b.name}</option>
-              ))}
-            </select>
+            <div className="admin-brand-search">
+              <input
+                value={brandInput}
+                placeholder={brandInput ? brandInput : 'Buscar o escribir una marca...'}
+                onChange={e => {
+                  setBrandInput(e.target.value)
+                  set('brand', e.target.value)
+                  setBrandOpen(true)
+                }}
+                onFocus={() => setBrandOpen(true)}
+                onBlur={() => setTimeout(() => setBrandOpen(false), 150)}
+                autoComplete="off"
+              />
+              {brandOpen && (
+                <div className="admin-brand-dropdown">
+                  <button type="button" className="admin-brand-item" onMouseDown={() => selectBrand('')}>
+                    Sin marca
+                  </button>
+                  {filteredBrands.map(name => (
+                    <button
+                      type="button"
+                      key={name}
+                      className={`admin-brand-item ${form.brand === name ? 'active' : ''}`}
+                      onMouseDown={() => selectBrand(name)}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                  {filteredBrands.length === 0 && (
+                    <span className="admin-brand-empty">Sin resultados</span>
+                  )}
+                </div>
+              )}
+            </div>
           </label>
           <label>
             Categoría

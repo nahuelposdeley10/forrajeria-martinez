@@ -9,7 +9,16 @@ export default function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      return stored ? JSON.parse(stored) : []
+      const parsed = stored ? JSON.parse(stored) : []
+      return Array.isArray(parsed)
+        ? parsed.map(i => ({
+            ...i,
+            image:
+              i.image ||
+              (Array.isArray(i.images) ? i.images.find(Boolean) : null) ||
+              '/products/placeholder.jpg',
+          }))
+        : []
     } catch {
       return []
     }
@@ -27,6 +36,11 @@ export default function CartProvider({ children }) {
   }, [items])
 
   const addItem = (product, qty = 1) => {
+    const image =
+      product.image ||
+      (Array.isArray(product.images) ? product.images.find(Boolean) : null) ||
+      '/products/placeholder.jpg'
+    const normalized = { ...product, image }
     setItems(prev => {
       const existing = prev.find(i => i.id === product.id)
       if (existing) {
@@ -34,7 +48,7 @@ export default function CartProvider({ children }) {
           i.id === product.id ? { ...i, qty: i.qty + qty } : i
         )
       }
-      return [...prev, { ...product, qty }]
+      return [...prev, { ...normalized, qty }]
     })
     setLastAdded(product)
     if (lastAddedTimer.current) clearTimeout(lastAddedTimer.current)

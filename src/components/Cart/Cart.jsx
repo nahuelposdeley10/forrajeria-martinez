@@ -70,7 +70,7 @@ export default function Cart({ open, onClose, addedId }) {
                   key={item.id}
                   className={`cart-item${item.id === highlightId ? ' added' : ''}`}
                 >
-                  <img src={item.image} alt={item.name} className="cart-item-img" />
+                  <img src={item.image || '/products/placeholder.jpg'} alt={item.name} className="cart-item-img" />
                   <div className="cart-item-info">
                     <span className="cart-item-name">{item.name}</span>
                     <span className="cart-item-price">{formatPrice(item.price)}</span>

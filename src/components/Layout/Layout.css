@@ -30,11 +30,26 @@
   text-decoration: none;
 }
 
-.nav-logo span {
+.nav-logo span:not(.nav-logo-icon) {
   background: linear-gradient(135deg, var(--accent), #e11d48);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.nav-logo-icon {
+  display: inline-block;
+  animation: nav-logo-spin 5s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes nav-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .nav-links {

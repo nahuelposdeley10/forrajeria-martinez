@@ -13,7 +13,9 @@ const EMPTY_FORM = {
   brand: '',
   category: 'perros',
   description: '',
-  detailsText: '',
+  benefitsText: '',
+  ingredientsText: '',
+  specsText: '',
   price: '',
   stock: 0,
   featured: false,
@@ -78,7 +80,13 @@ function Login({ onLogin }) {
 }
 
 function ProductForm({ initial, brandList, onSubmit, onClose }) {
-  const [form, setForm] = useState({ ...EMPTY_FORM, ...initial, detailsText: (initial?.details || []).join('\n') })
+  const [form, setForm] = useState({
+    ...EMPTY_FORM,
+    ...initial,
+    benefitsText: (initial?.benefits || []).join('\n'),
+    ingredientsText: (initial?.ingredients || []).join('\n'),
+    specsText: (initial?.specifications || []).map(s => `${s.label}|${s.value}`).join('\n'),
+  })
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -113,7 +121,13 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
       brand: form.brand.trim() || '',
       category: form.category,
       description: form.description.trim(),
-      details: form.detailsText.split('\n').map(s => s.trim()).filter(Boolean),
+      benefits: form.benefitsText.split('\n').map(s => s.trim()).filter(Boolean),
+      ingredients: form.ingredientsText.split('\n').map(s => s.trim()).filter(Boolean),
+      specifications: form.specsText
+        .split('\n')
+        .map(line => line.split('|').map(s => s?.trim() || ''))
+        .filter(pair => pair[0] && pair[1])
+        .map(([label, value]) => ({ label, value })),
       price: Number(form.price) || 0,
       stock: Math.max(0, Number(form.stock) || 0),
       featured: form.featured,
@@ -195,8 +209,18 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
         </label>
 
         <label className="admin-full">
-          Detalles (uno por línea)
-          <textarea value={form.detailsText} onChange={e => set('detailsText', e.target.value)} rows="4" placeholder={'Marca: X\nPresentación: x20\nOtra información'} />
+          Beneficios (uno por línea)
+          <textarea value={form.benefitsText} onChange={e => set('benefitsText', e.target.value)} rows="4" placeholder="Ayuda a mantener un peso saludable..." />
+        </label>
+
+        <label className="admin-full">
+          Ingredientes (uno por línea)
+          <textarea value={form.ingredientsText} onChange={e => set('ingredientsText', e.target.value)} rows="4" placeholder="Arroz, maíz, así de pollo..." />
+        </label>
+
+        <label className="admin-full">
+          Especificaciones (una por línea: Etiqueta | Valor)
+          <textarea value={form.specsText} onChange={e => set('specsText', e.target.value)} rows="4" placeholder={'Tamaño de mascota | Mini\nEdad | Adulto Senior'} />
         </label>
 
         <div className="admin-modal-actions">

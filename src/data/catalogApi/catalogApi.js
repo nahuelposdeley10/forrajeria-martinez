@@ -47,4 +47,6 @@ export const catalogApi = {
     request(`/brands?limit=${limit}`),
 
   fetchProduct: id => request(`/products/${id}`),
+
+  fetchPromotions: () => request('/promotions?active=true'),
 }

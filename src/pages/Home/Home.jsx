@@ -5,6 +5,7 @@ import { catalogApi } from '../../data/catalogApi/catalogApi'
 import FilterModal from '../../components/FilterModal/FilterModal'
 import { ProductGridSkeleton } from '../../components/Skeleton/Skeleton'
 import { WhatsAppIcon } from '../../components/Layout/Layout'
+import PromotionCarousel from '../../components/PromotionCarousel/PromotionCarousel'
 import { setSEO, setJsonLd, SITE_URL, SITE_NAME, SITE_DESCRIPTION } from '../../utils/seo/seo'
 import './Home.css'
 
@@ -402,6 +403,7 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <PromotionCarousel />
       <Products />
       <About />
       <Contact />

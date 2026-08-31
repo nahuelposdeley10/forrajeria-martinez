@@ -45,7 +45,11 @@ export function Navbar({ onOpenCart }) {
     <nav className="navbar">
       <div className="nav-container">
         <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-          <span className="nav-logo-icon">🐾</span> <span className="nav-logo-text">Forrajeria Martinez</span>
+          <span className="nav-logo-icon">🐾</span>
+          <span className="nav-logo-text">
+            <span className="nav-logo-name">Forrajería</span>
+            <span className="nav-logo-surname">Martínez</span>
+          </span>
         </Link>
         <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
           <li>

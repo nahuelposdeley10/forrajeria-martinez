@@ -50,6 +50,7 @@ function Products() {
   const [etapa, setEtapa] = useState('todos')
   const [tamano, setTamano] = useState('todos')
   const [raza, setRaza] = useState('todos')
+  const [foodType, setFoodType] = useState('seco')
   const [sort, setSort] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [data, setData] = useState({ products: [], total: 0, pages: 1 })
@@ -72,6 +73,7 @@ function Products() {
         stage: etapa,
         size: tamano,
         breed: raza,
+        foodType: foodType === 'todos' ? undefined : foodType,
         sort: sort || undefined,
         search,
         page,
@@ -87,7 +89,7 @@ function Products() {
     } finally {
       if (req === latestReq.current) setLoading(false)
     }
-  }, [activeCategory, marca, etapa, tamano, raza, sort, search, page])
+  }, [activeCategory, marca, etapa, tamano, raza, foodType, sort, search, page])
 
   useEffect(() => {
     const t = setTimeout(load, page > 1 ? 0 : 250)
@@ -129,14 +131,16 @@ function Products() {
     (etapa !== 'todos' ? 1 : 0) +
     (tamano !== 'todos' ? 1 : 0) +
     (raza !== 'todos' ? 1 : 0) +
+    (foodType !== 'todos' ? 1 : 0) +
     (sort !== '' ? 1 : 0)
 
-  const applyFilters = ({ category, marca: m, etapa: e, tamano: t, raza: r, sort: s }) => {
+  const applyFilters = ({ category, marca: m, etapa: e, tamano: t, raza: r, foodType: ft, sort: s }) => {
     setActiveCategory(category)
     setMarca(m)
     setEtapa(e)
     setTamano(t)
     setRaza(r)
+    setFoodType(ft ?? 'seco')
     setSort(s ?? '')
     setPage(1)
     setFiltersOpen(false)
@@ -200,6 +204,22 @@ function Products() {
               }}
             >
               {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        <div className="foodtype-filters">
+          <span className="foodtype-label">Tipo de alimento:</span>
+          {[['todos', 'Todos'], ['seco', 'Seco'], ['humedo', 'Húmedo']].map(([key, label]) => (
+            <button
+              key={key}
+              className={`filter-btn ${foodType === key ? 'active' : ''}`}
+              onClick={() => {
+                setFoodType(key)
+                setPage(1)
+              }}
+            >
+              {label}
             </button>
           ))}
         </div>
@@ -281,7 +301,7 @@ function Products() {
       <FilterModal
         key={filtersOpen ? 'open' : 'closed'}
         open={filtersOpen}
-        initial={{ category: activeCategory, marca, etapa, tamano, raza, sort }}
+        initial={{ category: activeCategory, marca, etapa, tamano, raza, foodType, sort }}
         facets={facets}
         brands={brandOptions}
         onApply={applyFilters}

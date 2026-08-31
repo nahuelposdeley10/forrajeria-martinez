@@ -12,6 +12,7 @@ const EMPTY_FORM = {
   name: '',
   brand: '',
   category: 'perros',
+  foodType: '',
   description: '',
   benefitsText: '',
   ingredientsText: '',
@@ -143,6 +144,7 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
       name: form.name.trim(),
       brand: form.brand.trim() || '',
       category: form.category,
+      foodType: form.foodType || '',
       description: form.description.trim(),
       benefits: form.benefitsText.split('\n').map(s => s.trim()).filter(Boolean),
       ingredients: form.ingredientsText.split('\n').map(s => s.trim()).filter(Boolean),
@@ -224,6 +226,14 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
               {categories.filter(c => c !== 'todos').map(c => (
                 <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
               ))}
+            </select>
+          </label>
+          <label>
+            Tipo de alimento
+            <select value={form.foodType} onChange={e => set('foodType', e.target.value)}>
+              <option value="">Sin tipo</option>
+              <option value="seco">Seco</option>
+              <option value="humedo">Húmedo</option>
             </select>
           </label>
           <label>

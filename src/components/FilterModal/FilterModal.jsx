@@ -9,6 +9,7 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
   const [etapa, setEtapa] = useState(initial.etapa)
   const [tamano, setTamano] = useState(initial.tamano)
   const [raza, setRaza] = useState(initial.raza)
+  const [foodType, setFoodType] = useState(initial.foodType || 'seco')
   const [sort, setSort] = useState(initial.sort)
 
   const brandOptions = brands.length > 0 ? brands : facets?.brands || []
@@ -22,6 +23,7 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
     setEtapa('todos')
     setTamano('todos')
     setRaza('todos')
+    setFoodType('seco')
     setSort('')
   }
 
@@ -31,6 +33,7 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
     etapa,
     tamano,
     raza,
+    foodType,
     sort,
   })
 
@@ -56,6 +59,21 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
                   onClick={() => setCategory(cat)}
                 >
                   {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-modal-group">
+            <span className="filter-label">Tipo de alimento</span>
+            <div className="filter-chips">
+              {[['todos', 'Todos'], ['seco', 'Seco'], ['humedo', 'Húmedo']].map(([key, label]) => (
+                <button
+                  key={key}
+                  className={`filter-chip ${foodType === key ? 'active' : ''}`}
+                  onClick={() => setFoodType(key)}
+                >
+                  {label}
                 </button>
               ))}
             </div>

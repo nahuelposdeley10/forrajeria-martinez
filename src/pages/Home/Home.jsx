@@ -234,7 +234,9 @@ function Products() {
                 <div className="product-info">
                   <span className="product-category">{product.brand || 'Sin marca'}</span>
                   <h3>{product.name}</h3>
-                  <p>{product.description}</p>
+                  <p>{product.description && product.description.length > 120
+                    ? `${product.description.slice(0, 120).trim()}...`
+                    : product.description}</p>
                   <div className="product-footer">
                     <span className="product-price">{formatPrice(product.price)}</span>
                     <Link to={`/producto/${product.id}`} className="btn btn-detail-sm">

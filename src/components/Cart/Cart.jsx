@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/Cart/CartContext'
 import { formatPrice } from '../../data/products/products'
@@ -11,6 +11,11 @@ export default function Cart({ open, onClose, addedId }) {
   const [prevAddedId, setPrevAddedId] = useState(null)
   const [delivery, setDelivery] = useState(false)
   const [address, setAddress] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+  const searchTimer = useRef(null)
+  const addressWrapRef = useRef(null)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -40,6 +45,47 @@ export default function Cart({ open, onClose, addedId }) {
     const timer = setTimeout(() => setHighlightId(null), 2200)
     return () => clearTimeout(timer)
   }, [addedId])
+
+  const searchAddress = (value) => {
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    const query = value.trim()
+    if (query.length < 3) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      setLoadingSuggestions(false)
+      return
+    }
+    setLoadingSuggestions(true)
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=20&addressdetails=1&countrycodes=ar&viewbox=-59.05,-34.20,-57.60,-35.20&bounded=1&q=${encodeURIComponent(query)}`
+        )
+        const data = await res.json()
+        const filtered = data.filter(s =>
+          s.address &&
+          (s.address.city === 'Buenos Aires' || s.address.state === 'Buenos Aires')
+        )
+        setSuggestions(filtered)
+        setShowSuggestions(true)
+      } catch {
+        setSuggestions([])
+        setShowSuggestions(false)
+      } finally {
+        setLoadingSuggestions(false)
+      }
+    }, 350)
+  }
+
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (addressWrapRef.current && !addressWrapRef.current.contains(e.target)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
 
   if (!open) return null
 
@@ -106,13 +152,50 @@ export default function Cart({ open, onClose, addedId }) {
                   <span>🚚 Envío a domicilio</span>
                 </label>
                 {delivery && (
-                  <input
-                    type="text"
-                    className="cart-delivery-address"
-                    placeholder="Dirección de entrega (calle, número, ciudad)"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
+                  <div className="cart-address-wrap" ref={addressWrapRef}>
+                    <input
+                      type="text"
+                      className="cart-delivery-address"
+                      placeholder="Dirección de entrega (calle, número, ciudad)"
+                      value={address}
+                      onChange={(e) => {
+                        setAddress(e.target.value)
+                        searchAddress(e.target.value)
+                      }}
+                      onFocus={() => {
+                        if (suggestions.length > 0) setShowSuggestions(true)
+                      }}
+                      autoComplete="off"
+                    />
+                    {showSuggestions && (
+                      <ul className="cart-address-suggestions">
+                        {loadingSuggestions ? (
+                          <li className="cart-address-suggestion-loading">Buscando...</li>
+                        ) : suggestions.length === 0 ? (
+                          <li className="cart-address-suggestion-empty">
+                            Escribí tu calle y barrio o ciudad
+                          </li>
+                        ) : (
+                          suggestions.map((s, i) => (
+                            <li key={s.place_id || i}>
+                              <button
+                                type="button"
+                                className="cart-address-suggestion"
+                                onClick={() => {
+                                  setAddress(s.display_name)
+                                  setShowSuggestions(false)
+                                  setSuggestions([])
+                                }}
+                              >
+                                <span className="cart-address-suggestion-icon">📍</span>
+                                <span>{s.display_name}</span>
+                              </button>
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                    )}
+                  </div>
                 )}
               </div>
 

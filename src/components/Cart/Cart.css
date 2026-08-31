@@ -245,6 +245,62 @@
   color: var(--text-light);
 }
 
+.cart-address-wrap {
+  position: relative;
+}
+
+.cart-address-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 20;
+  animation: fadeIn 0.15s ease;
+}
+
+.cart-address-suggestion {
+  width: 100%;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font);
+  line-height: 1.3;
+}
+
+.cart-address-suggestion:hover {
+  background: var(--bg);
+}
+
+.cart-address-suggestion-icon {
+  flex-shrink: 0;
+  font-size: 15px;
+}
+
+.cart-address-suggestion-loading,
+.cart-address-suggestion-empty {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-light);
+  text-align: center;
+}
+
 .cart-total {
   display: flex;
   align-items: center;

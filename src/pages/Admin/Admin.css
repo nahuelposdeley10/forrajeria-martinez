@@ -149,6 +149,20 @@
   align-items: center;
 }
 
+.admin-promo-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.admin-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
 .admin-thumb {
   width: 46px;
   height: 46px;

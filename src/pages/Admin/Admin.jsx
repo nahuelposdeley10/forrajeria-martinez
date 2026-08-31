@@ -25,6 +25,16 @@ const EMPTY_FORM = {
 
 const IMAGE_MAX = 2 * 1024 * 1024
 
+const EMPTY_PROMOTION = {
+  id: null,
+  title: '',
+  image: '',
+  description: '',
+  whatsappMessage: '',
+  active: true,
+  sortOrder: 0,
+}
+
 function Login({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -227,6 +237,114 @@ function ProductForm({ initial, brandList, onSubmit, onClose }) {
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={submitting}>Cancelar</button>
           <button type="submit" className="btn btn-primary" disabled={submitting || uploading}>
             {submitting ? 'Guardando...' : form.id ? 'Guardar cambios' : 'Crear producto'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+function PromotionForm({ initial, onSubmit, onClose }) {
+  const [form, setForm] = useState({ ...EMPTY_PROMOTION, ...initial })
+  const [uploading, setUploading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  const set = (key, value) => setForm(f => ({ ...f, [key]: value }))
+
+  const handleFile = async file => {
+    if (!file) return
+    if (file.size > IMAGE_MAX) {
+      alert('La imagen es muy pesada (máximo 2 MB).')
+      return
+    }
+    setUploading(true)
+    setError('')
+    try {
+      const res = await api.uploadImage(file)
+      set('image', res.url)
+    } catch (err) {
+      setError(`No se pudo subir la imagen: ${err.message}`)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const submit = async e => {
+    e.preventDefault()
+    if (!form.title.trim()) return
+    setSubmitting(true)
+    setError('')
+    const promotion = {
+      title: form.title.trim(),
+      image: form.image || '',
+      description: form.description.trim(),
+      whatsappMessage: form.whatsappMessage.trim(),
+      active: form.active,
+      sortOrder: Math.max(0, Number(form.sortOrder) || 0),
+    }
+    try {
+      await onSubmit({ id: form.id, ...promotion })
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="admin-modal-backdrop">
+      <form className="admin-modal" onSubmit={submit}>
+        <div className="admin-modal-head">
+          <h3>{form.id ? 'Editar promoción' : 'Nueva promoción'}</h3>
+          <button type="button" className="admin-close" onClick={onClose} aria-label="Cerrar">✕</button>
+        </div>
+
+        {error && <p className="admin-error">{error}</p>}
+
+        <div className="admin-form-grid">
+          <label>
+            Título
+            <input value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ej: 2x1 en Alimento Balanceado" required />
+          </label>
+          <label>
+            Orden (menor = primero)
+            <input type="number" min="0" value={form.sortOrder} onChange={e => set('sortOrder', e.target.value)} />
+          </label>
+        </div>
+
+        <label className="admin-full">
+          Descripción
+          <textarea value={form.description} onChange={e => set('description', e.target.value)} rows="2" placeholder="Descripción breve que se muestra en el carrusel" />
+        </label>
+
+        <label className="admin-full">
+          Mensaje de WhatsApp
+          <textarea value={form.whatsappMessage} onChange={e => set('whatsappMessage', e.target.value)} rows="2" placeholder="Texto que llega al chat al hacer clic. Ej: Hola! Quiero aprovechar el 2x1..." />
+        </label>
+
+        <div className="admin-form-checkboxes">
+          <label><input type="checkbox" checked={form.active} onChange={e => set('active', e.target.checked)} /> Visible en la tienda</label>
+        </div>
+
+        <label className="admin-full">
+          Imagen (opcional)
+          <input type="file" accept="image/*" onChange={e => handleFile(e.target.files?.[0])} disabled={uploading} />
+          {uploading && <span className="admin-hint">Subiendo a Cloudinary...</span>}
+          {(form.image || uploading) && (
+            <img src={form.image || ''} alt="Vista previa" className="admin-image-preview" />
+          )}
+        </label>
+
+        <label className="admin-full">
+          URL de imagen
+          <input value={form.image} onChange={e => set('image', e.target.value)} placeholder="https://res.cloudinary.com/..." />
+        </label>
+
+        <div className="admin-modal-actions">
+          <button type="button" className="btn btn-ghost" onClick={onClose} disabled={submitting}>Cancelar</button>
+          <button type="submit" className="btn btn-primary" disabled={submitting || uploading}>
+            {submitting ? 'Guardando...' : form.id ? 'Guardar cambios' : 'Crear promoción'}
           </button>
         </div>
       </form>
@@ -441,6 +559,12 @@ function Admin() {
   const [brandTotal, setBrandTotal] = useState(0)
   const [brandPages, setBrandPages] = useState(1)
   const [brandLoading, setBrandLoading] = useState(false)
+  const [promotions, setPromotions] = useState([])
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [promoFormOpen, setPromoFormOpen] = useState(false)
+  const [promoEditing, setPromoEditing] = useState(null)
+  const [pendingPromoDelete, setPendingPromoDelete] = useState(null)
+  const [promoDeleting, setPromoDeleting] = useState(false)
   const [totalProducts, setTotalProducts] = useState(0)
   const [pagesCount, setPagesCount] = useState(1)
   const toastId = useRef(0)
@@ -508,6 +632,45 @@ function Admin() {
     }
   }, [])
 
+  const loadPromotions = useCallback(async () => {
+    setPromoLoading(true)
+    try {
+      const data = await api.fetchPromotions()
+      setPromotions(data.promotions || [])
+    } catch {
+      /* quedan vacías */
+    } finally {
+      setPromoLoading(false)
+    }
+  }, [])
+
+  const submitPromotion = async data => {
+    if (data.id) {
+      await api.updatePromotion(data.id, data)
+      notify('Promoción editada correctamente')
+    } else {
+      await api.createPromotion(data)
+      notify('Promoción agregada correctamente')
+    }
+    setPromoFormOpen(false)
+    await loadPromotions()
+  }
+
+  const confirmPromoDelete = async () => {
+    if (!pendingPromoDelete) return
+    setPromoDeleting(true)
+    try {
+      await api.deletePromotion(pendingPromoDelete.id)
+      notify(`Promoción "${pendingPromoDelete.title}" eliminada`)
+      setPendingPromoDelete(null)
+      await loadPromotions()
+    } catch (err) {
+      notify(err.message, 'danger')
+    } finally {
+      setPromoDeleting(false)
+    }
+  }
+
   const handleLogin = () => {
     setError('')
     setAuthed(true)
@@ -532,6 +695,12 @@ function Admin() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAllBrands()
   }, [authed, loadAllBrands])
+
+  useEffect(() => {
+    if (!authed) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPromotions()
+  }, [authed, loadPromotions])
 
   const brandList = allBrands
 
@@ -649,6 +818,7 @@ function Admin() {
     setBrandTotal(0)
     setBrandPages(1)
     setBrandLoading(false)
+    setPromotions([])
     setSearch('')
     setBrandFilter('')
     setCatFilter('')
@@ -675,6 +845,7 @@ function Admin() {
       <div className="admin-tabs">
         <button type="button" className={tab === 'productos' ? 'active' : ''} onClick={() => setTab('productos')}>Productos</button>
         <button type="button" className={tab === 'marcas' ? 'active' : ''} onClick={() => setTab('marcas')}>Marcas</button>
+        <button type="button" className={tab === 'promociones' ? 'active' : ''} onClick={() => setTab('promociones')}>Promociones</button>
       </div>
 
       {tab === 'productos' && (
@@ -769,6 +940,52 @@ function Admin() {
         />
       )}
 
+      {tab === 'promociones' && (
+        <div className="admin-tab">
+          <div className="admin-toolbar">
+            <p className="results-count">{promoLoading ? 'Cargando...' : `${promotions.length} promoción${promotions.length !== 1 ? 'es' : ''}`}</p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => { setPromoEditing(null); setPromoFormOpen(true) }}
+            >
+              + Nueva promoción
+            </button>
+          </div>
+
+          <div className="admin-table">
+            {!promoLoading && [...promotions]
+              .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+              .map(p => (
+                <div className="admin-table-row admin-promo-row" key={p.id}>
+                  {p.image
+                    ? <img src={p.image} alt="" className="admin-thumb" />
+                    : <span className="admin-thumb admin-thumb-placeholder">🎯</span>}
+                  <div className="admin-product-info">
+                    <span className="admin-product-name">{p.title}</span>
+                    <span className="admin-hint">
+                      {p.active ? 'Visible' : 'Oculta'} · orden {p.sortOrder || 0}
+                    </span>
+                  </div>
+                  <div className="admin-actions">
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setPromoEditing(p); setPromoFormOpen(true) }}>Editar</button>
+                    <button type="button" className="btn btn-danger btn-sm" onClick={() => setPendingPromoDelete(p)}>Eliminar</button>
+                  </div>
+                </div>
+              ))}
+            {!promoLoading && promotions.length === 0 && <p className="no-results">No hay promociones.</p>}
+          </div>
+        </div>
+      )}
+
+      {promoFormOpen && (
+        <PromotionForm
+          initial={promoEditing}
+          onSubmit={submitPromotion}
+          onClose={() => setPromoFormOpen(false)}
+        />
+      )}
+
       {formOpen && (
         <ProductForm
           initial={editing}
@@ -796,6 +1013,17 @@ function Admin() {
           onDeleteProducts={deleteBrandWithProducts}
           onDeleteBrand={deleteBrandOnly}
           onCancel={() => setPendingBrandDelete(null)}
+        />
+      )}
+
+      {pendingPromoDelete && (
+        <ConfirmDialog
+          title="¿Eliminar promoción?"
+          message={`Se va a eliminar la promoción "${pendingPromoDelete.title}". Esta acción no se puede deshacer.`}
+          confirmLabel="Sí, eliminar"
+          busy={promoDeleting}
+          onConfirm={confirmPromoDelete}
+          onCancel={() => setPendingPromoDelete(null)}
         />
       )}
 

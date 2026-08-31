@@ -115,4 +115,14 @@ export const api = {
     request(`/brands/${encodeURIComponent(name)}?products=${opts.products || 'unbrand'}`, {
       method: 'DELETE',
     }),
+
+  fetchPromotions: () => request('/promotions?active=all'),
+
+  createPromotion: data =>
+    request('/promotions', { method: 'POST', body: JSON.stringify(data) }),
+
+  updatePromotion: (id, data) =>
+    request(`/promotions/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  deletePromotion: id => request(`/promotions/${id}`, { method: 'DELETE' }),
 }

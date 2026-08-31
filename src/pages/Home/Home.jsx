@@ -49,6 +49,8 @@ function Products() {
   const [etapa, setEtapa] = useState('todos')
   const [tamano, setTamano] = useState('todos')
   const [raza, setRaza] = useState('todos')
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [data, setData] = useState({ products: [], total: 0, pages: 1 })
   const [loading, setLoading] = useState(true)
@@ -70,6 +72,8 @@ function Products() {
         stage: etapa,
         size: tamano,
         breed: raza,
+        minPrice: minPrice || undefined,
+        maxPrice: maxPrice || undefined,
         search,
         page,
         limit: PAGE_SIZE,
@@ -84,7 +88,7 @@ function Products() {
     } finally {
       if (req === latestReq.current) setLoading(false)
     }
-  }, [activeCategory, marca, etapa, tamano, raza, search, page])
+  }, [activeCategory, marca, etapa, tamano, raza, minPrice, maxPrice, search, page])
 
   useEffect(() => {
     const t = setTimeout(load, page > 1 ? 0 : 250)
@@ -125,14 +129,17 @@ function Products() {
     (marca !== 'todos' ? 1 : 0) +
     (etapa !== 'todos' ? 1 : 0) +
     (tamano !== 'todos' ? 1 : 0) +
-    (raza !== 'todos' ? 1 : 0)
+    (raza !== 'todos' ? 1 : 0) +
+    (minPrice !== '' || maxPrice !== '' ? 1 : 0)
 
-  const applyFilters = ({ category, marca: m, etapa: e, tamano: t, raza: r }) => {
+  const applyFilters = ({ category, marca: m, etapa: e, tamano: t, raza: r, minPrice: min, maxPrice: max }) => {
     setActiveCategory(category)
     setMarca(m)
     setEtapa(e)
     setTamano(t)
     setRaza(r)
+    setMinPrice(min ?? '')
+    setMaxPrice(max ?? '')
     setPage(1)
     setFiltersOpen(false)
   }
@@ -274,7 +281,7 @@ function Products() {
       <FilterModal
         key={filtersOpen ? 'open' : 'closed'}
         open={filtersOpen}
-        initial={{ category: activeCategory, marca, etapa, tamano, raza }}
+        initial={{ category: activeCategory, marca, etapa, tamano, raza, minPrice, maxPrice }}
         facets={facets}
         brands={brandOptions}
         onApply={applyFilters}

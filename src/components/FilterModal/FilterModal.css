@@ -101,6 +101,36 @@
   border-color: var(--accent);
 }
 
+.filter-price-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-price-input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: var(--font);
+  min-width: 0;
+}
+
+.filter-price-input:focus {
+  border-color: var(--accent);
+}
+
+.filter-price-sep {
+  color: var(--text-light);
+  font-weight: 700;
+}
+
 .filter-chip {
   padding: 8px 16px;
   border-radius: 50px;

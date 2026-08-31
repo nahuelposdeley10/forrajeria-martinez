@@ -9,6 +9,8 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
   const [etapa, setEtapa] = useState(initial.etapa)
   const [tamano, setTamano] = useState(initial.tamano)
   const [raza, setRaza] = useState(initial.raza)
+  const [minPrice, setMinPrice] = useState(initial.minPrice ?? '')
+  const [maxPrice, setMaxPrice] = useState(initial.maxPrice ?? '')
 
   const brandOptions = brands.length > 0 ? brands : facets?.brands || []
   const breedOptions = facets?.breeds || []
@@ -21,9 +23,19 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
     setEtapa('todos')
     setTamano('todos')
     setRaza('todos')
+    setMinPrice('')
+    setMaxPrice('')
   }
 
-  const apply = () => onApply({ category, marca, etapa, tamano, raza })
+  const apply = () => onApply({
+    category,
+    marca,
+    etapa,
+    tamano,
+    raza,
+    minPrice,
+    maxPrice,
+  })
 
   return (
     <>
@@ -49,6 +61,29 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
                   {cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="filter-modal-group">
+            <span className="filter-label">Precio</span>
+            <div className="filter-price-range">
+              <input
+                type="number"
+                min="0"
+                placeholder="Mínimo"
+                className="filter-price-input"
+                value={minPrice}
+                onChange={e => setMinPrice(e.target.value)}
+              />
+              <span className="filter-price-sep">–</span>
+              <input
+                type="number"
+                min="0"
+                placeholder="Máximo"
+                className="filter-price-input"
+                value={maxPrice}
+                onChange={e => setMaxPrice(e.target.value)}
+              />
             </div>
           </div>
 

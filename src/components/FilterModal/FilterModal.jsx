@@ -9,8 +9,7 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
   const [etapa, setEtapa] = useState(initial.etapa)
   const [tamano, setTamano] = useState(initial.tamano)
   const [raza, setRaza] = useState(initial.raza)
-  const [minPrice, setMinPrice] = useState(initial.minPrice ?? '')
-  const [maxPrice, setMaxPrice] = useState(initial.maxPrice ?? '')
+  const [sort, setSort] = useState(initial.sort)
 
   const brandOptions = brands.length > 0 ? brands : facets?.brands || []
   const breedOptions = facets?.breeds || []
@@ -23,8 +22,7 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
     setEtapa('todos')
     setTamano('todos')
     setRaza('todos')
-    setMinPrice('')
-    setMaxPrice('')
+    setSort('')
   }
 
   const apply = () => onApply({
@@ -33,8 +31,7 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
     etapa,
     tamano,
     raza,
-    minPrice,
-    maxPrice,
+    sort,
   })
 
   return (
@@ -66,25 +63,15 @@ export default function FilterModal({ open, initial, facets, brands = [], onAppl
 
           <div className="filter-modal-group">
             <span className="filter-label">Precio</span>
-            <div className="filter-price-range">
-              <input
-                type="number"
-                min="0"
-                placeholder="Mínimo"
-                className="filter-price-input"
-                value={minPrice}
-                onChange={e => setMinPrice(e.target.value)}
-              />
-              <span className="filter-price-sep">–</span>
-              <input
-                type="number"
-                min="0"
-                placeholder="Máximo"
-                className="filter-price-input"
-                value={maxPrice}
-                onChange={e => setMaxPrice(e.target.value)}
-              />
-            </div>
+            <select
+              className="filter-select"
+              value={sort}
+              onChange={e => setSort(e.target.value)}
+            >
+              <option value="">Ordenar por</option>
+              <option value="price">Menor precio</option>
+              <option value="-price">Mayor precio</option>
+            </select>
           </div>
 
           <div className="filter-modal-group">
